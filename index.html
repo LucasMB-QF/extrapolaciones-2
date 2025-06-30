@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrapolador Avanzado - Preservar Forma</title>
+    <title>Extrapolador Avanzado - Controles Independientes</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -219,7 +219,6 @@
         #horizontalDeformation::-webkit-slider-thumb { background: var(--horizontal); }
         #verticalDeformation::-webkit-slider-thumb { background: var(--vertical); }
         #elasticEffect::-webkit-slider-thumb { background: var(--elastic); }
-        #frequencyEffect::-webkit-slider-thumb { background: #3498db; }
         #chaosEffect::-webkit-slider-thumb { background: #e74c3c; }
         
         button {
@@ -479,11 +478,6 @@
             color: var(--elastic);
             background: rgba(230, 126, 34, 0.15);
             font-weight: 800;
-        }
-        
-        #frequencyPercent {
-            color: #3498db;
-            background: rgba(52, 152, 219, 0.1);
         }
         
         #chaosPercent {
@@ -925,6 +919,34 @@
             text-align: center;
             font-size: 0.9rem;
         }
+        
+        .deformation-status-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+        }
+        
+        .status-indicator span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .status-active {
+            background: #2ecc71;
+        }
+        
+        .status-inactive {
+            background: #e0e0e0;
+        }
     </style>
 </head>
 <body>
@@ -932,29 +954,28 @@
     
     <div class="container">
         <header>
-            <h1><i class="fas fa-file-waveform"></i> Extrapolador Avanzado <span class="format-badge excel-badge">PRESERVAR FORMA</span></h1>
-            <p class="subtitle">Mantiene los picos y características distintivas de la curva original</p>
+            <h1><i class="fas fa-file-waveform"></i> Extrapolador Avanzado <span class="format-badge excel-badge">CONTROLES INDEPENDIENTES</span></h1>
+            <p class="subtitle">Ahora cada tipo de deformación funciona de manera independiente</p>
         </header>
         
         <div class="controls">
             <div class="solution-highlight">
-                <h3><i class="fas fa-check-circle"></i> Características Clave</h3>
+                <h3><i class="fas fa-check-circle"></i> Cambios Implementados</h3>
                 <ul>
-                    <li><span class="enhancement-tag">ALGORITHM</span> Nuevo algoritmo que preserva los picos originales</li>
-                    <li><span class="enhancement-tag">FEATURE</span> Modo "Preservar Forma" activado por defecto</li>
-                    <li><span class="enhancement-tag">UI</span> Controles optimizados para mantener características clave</li>
-                    <li><span class="enhancement-tag">VISUAL</span> Destacado de picos y valles en el gráfico</li>
+                    <li><span class="enhancement-tag">FIX</span> Cada tipo de deformación ahora funciona de forma independiente</li>
+                    <li><span class="enhancement-tag">FEATURE</span> Indicadores visuales para mostrar qué deformaciones están activas</li>
+                    <li><span class="enhancement-tag">UI</span> Controles optimizados para operar de forma independiente</li>
+                    <li><span class="enhancement-tag">PERF</span> Mejor rendimiento en la previsualización</li>
                 </ul>
             </div>
             
             <div class="instructions">
-                <h3><i class="fas fa-lightbulb"></i> Modo de Uso</h3>
+                <h3><i class="fas fa-lightbulb"></i> Instrucciones de Uso</h3>
                 <ul>
-                    <li>Cargue archivos Excel, CSV o de texto plano</li>
-                    <li>Seleccione la columna a modificar</li>
-                    <li>Ajuste los parámetros de deformación</li>
-                    <li>Los picos y valles se mantendrán intactos</li>
-                    <li>Descargue el archivo modificado en el formato deseado</li>
+                    <li>Cada control de deformación funciona de manera independiente</li>
+                    <li>Puedes activar/desactivar cualquier deformación sin afectar las demás</li>
+                    <li>Los cambios se muestran en tiempo real en el gráfico</li>
+                    <li>El círculo verde indica qué deformación está activa actualmente</li>
                 </ul>
             </div>
             
@@ -1031,6 +1052,7 @@
             
             <div class="control-group" id="deformationSection" style="display: none;">
                 <h2><i class="fas fa-sliders-h"></i> Deformación de Datos</h2>
+                
                 <div class="input-group">
                     <label for="minTemp"><i class="fas fa-temperature-low"></i> Mínima:</label>
                     <div class="compact-group">
@@ -1049,54 +1071,58 @@
                     <input type="range" id="maxTempRange" min="0" max="60" step="0.5">
                 </div>
                 
-                <div class="deformation-intensity">
-                    <span><i class="fas fa-shapes"></i> Intensidad</span>
-                    <input type="range" id="shapeDeformation" min="0" max="200" value="100">
-                    <span id="deformationPercent">100%</span>
-                </div>
-                <div class="deformation-description">Controla la intensidad de la deformación global</div>
-                
-                <div class="deformation-intensity">
-                    <span><i class="fas fa-arrows-alt-h"></i> Horizontal</span>
-                    <input type="range" id="horizontalDeformation" min="0" max="200" value="100">
-                    <span id="horizontalPercent">100%</span>
-                </div>
-                <div class="deformation-description">Ajusta la deformación en el eje horizontal</div>
-                
-                <div class="deformation-intensity">
-                    <span><i class="fas fa-arrows-alt-v"></i> Vertical</span>
-                    <input type="range" id="verticalDeformation" min="0" max="200" value="100">
-                    <span id="verticalPercent">100%</span>
-                </div>
-                <div class="deformation-description">Controla la deformación en el eje vertical</div>
-                
-                <div class="deformation-intensity">
-                    <span><i class="fas fa-expand-alt"></i> Elástico</span>
-                    <input type="range" id="elasticEffect" min="0" max="200" value="140">
-                    <span id="elasticPercent">140%</span>
-                </div>
-                <div class="deformation-description">Efecto amplificado para zonas planas</div>
-                
-                <div class="deformation-intensity">
-                    <span><i class="fas fa-wave-square"></i> Frecuencia</span>
-                    <input type="range" id="frequencyEffect" min="0" max="200" value="100">
-                    <span id="frequencyPercent">100%</span>
-                </div>
-                <div class="deformation-description">Densidad de las oscilaciones</div>
-                
-                <div class="deformation-intensity">
-                    <span><i class="fas fa-fire"></i> Caos</span>
-                    <input type="range" id="chaosEffect" min="0" max="200" value="50">
-                    <span id="chaosPercent">50%</span>
-                </div>
-                <div class="deformation-description">Aleatoriedad en la deformación</div>
-                
-                <div class="elastic-preview">
-                    <div class="elastic-demo" style="--i: 0"></div>
-                    <div class="elastic-demo" style="--i: 1"></div>
-                    <div class="elastic-demo" style="--i: 2"></div>
-                    <div class="elastic-demo" style="--i: 3"></div>
-                    <div class="elastic-demo" style="--i: 4"></div>
+                <div class="deformation-controls">
+                    <h3><i class="fas fa-sliders-h"></i> Controles de Deformación Independientes</h3>
+                    
+                    <div class="deformation-intensity">
+                        <span><i class="fas fa-shapes"></i> Intensidad</span>
+                        <input type="range" id="shapeDeformation" min="0" max="200" value="100">
+                        <span id="deformationPercent">100%</span>
+                    </div>
+                    <div class="deformation-description">Controla la intensidad general de todas las deformaciones</div>
+                    
+                    <div class="deformation-intensity">
+                        <span><i class="fas fa-arrows-alt-h"></i> Horizontal</span>
+                        <input type="range" id="horizontalDeformation" min="0" max="200" value="100">
+                        <span id="horizontalPercent">100%</span>
+                    </div>
+                    <div class="deformation-description">Ajusta la deformación en el eje horizontal</div>
+                    
+                    <div class="deformation-intensity">
+                        <span><i class="fas fa-arrows-alt-v"></i> Vertical</span>
+                        <input type="range" id="verticalDeformation" min="0" max="200" value="100">
+                        <span id="verticalPercent">100%</span>
+                    </div>
+                    <div class="deformation-description">Controla la deformación en el eje vertical</div>
+                    
+                    <div class="deformation-intensity">
+                        <span><i class="fas fa-expand-alt"></i> Elástico</span>
+                        <input type="range" id="elasticEffect" min="0" max="200" value="140">
+                        <span id="elasticPercent">140%</span>
+                    </div>
+                    <div class="deformation-description">Efecto amplificado para zonas planas</div>
+                    
+                    <div class="deformation-intensity">
+                        <span><i class="fas fa-fire"></i> Caos</span>
+                        <input type="range" id="chaosEffect" min="0" max="200" value="50">
+                        <span id="chaosPercent">50%</span>
+                    </div>
+                    <div class="deformation-description">Aleatoriedad en la deformación</div>
+                    
+                    <div class="deformation-status-indicator">
+                        <div class="status-indicator">
+                            <span id="horizontalStatus" class="status-inactive"></span> Horizontal
+                        </div>
+                        <div class="status-indicator">
+                            <span id="verticalStatus" class="status-inactive"></span> Vertical
+                        </div>
+                        <div class="status-indicator">
+                            <span id="elasticStatus" class="status-inactive"></span> Elástico
+                        </div>
+                        <div class="status-indicator">
+                            <span id="chaosStatus" class="status-inactive"></span> Caos
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="toggle-group">
@@ -1178,7 +1204,7 @@
         </div>
         
         <footer>
-            <p><i class="fas fa-info-circle"></i> Extrapolador Avanzado | Preserva la forma original de la curva</p>
+            <p><i class="fas fa-info-circle"></i> Extrapolador Avanzado | Controles independientes de deformación</p>
         </footer>
     </div>
 
@@ -1194,7 +1220,6 @@
         let horizontalDeformation = 1.0;
         let verticalDeformation = 1.0;
         let elasticEffect = 1.4;
-        let frequencyEffect = 1.0;
         let chaosEffect = 0.5;
         let preserveShape = true;
         let smoothCurve = false;
@@ -1214,7 +1239,7 @@
         let exportFormat = "excel";
         let currentFileType = "excel";
         let keyPoints = [];
-
+        
         // Elementos del DOM
         const excelFileInput = document.getElementById('excelFileInput');
         const csvFileInput = document.getElementById('csvFileInput');
@@ -1244,13 +1269,11 @@
         const horizontalDeformationSlider = document.getElementById('horizontalDeformation');
         const verticalDeformationSlider = document.getElementById('verticalDeformation');
         const elasticEffectSlider = document.getElementById('elasticEffect');
-        const frequencyEffectSlider = document.getElementById('frequencyEffect');
         const chaosEffectSlider = document.getElementById('chaosEffect');
         const deformationPercent = document.getElementById('deformationPercent');
         const horizontalPercent = document.getElementById('horizontalPercent');
         const verticalPercent = document.getElementById('verticalPercent');
         const elasticPercent = document.getElementById('elasticPercent');
-        const frequencyPercent = document.getElementById('frequencyPercent');
         const chaosPercent = document.getElementById('chaosPercent');
         const preserveShapeCheckbox = document.getElementById('preserveShape');
         const smoothCurveCheckbox = document.getElementById('smoothCurve');
@@ -1271,6 +1294,10 @@
         const csvSection = document.getElementById('csvSection');
         const keyPointsInfo = document.getElementById('keyPointsInfo');
         const keyPointsCount = document.getElementById('keyPointsCount');
+        const horizontalStatus = document.getElementById('horizontalStatus');
+        const verticalStatus = document.getElementById('verticalStatus');
+        const elasticStatus = document.getElementById('elasticStatus');
+        const chaosStatus = document.getElementById('chaosStatus');
 
         // Función para mostrar notificaciones
         function showNotification(message, type = 'info', duration = 3000) {
@@ -1386,7 +1413,7 @@ def process_excel():
                 for row_idx in range(min_row, max_row + 1):
                     cell = ws.cell(row=row_idx, column=col_idx)
                     
-                    # Saltar celdas combinadas que no son la principal
+                    // Saltar celdas combinadas que no son la principal
                     if isinstance(cell, MergedCell):
                         continue
                     
@@ -1402,7 +1429,7 @@ def process_excel():
                             num = float(val)
                         
                         col_values.append(num)
-                        positions.append(row_idx)  # Guardar la fila original
+                        positions.append(row_idx)  // Guardar la fila original
                     except:
                         output["debug_info"] += "  Celda {}{} inválida: '{}'\\n".format(col_letter, row_idx, cell.value)
                 
@@ -1653,83 +1680,100 @@ result_json = process_excel()
             updateChart(columnData, previewData);
         }
 
-        // Calcular deformación preservando forma
-        function calculateDeformation(columnData) {
-            const originalRange = maxOriginal - minOriginal;
-            const newRange = maxTemp - minTemp;
-            
-            let deformedData = [];
-            
-            if (originalRange === 0) {
-                const avg = (minTemp + maxTemp) / 2;
-                deformedData = columnData.map(() => avg);
-            } else {
-                // Escalado lineal inicial
-                deformedData = columnData.map(value => {
-                    const normalized = (value - minOriginal) / originalRange;
-                    return minTemp + normalized * newRange;
-                });
-            }
-            
-            // Aplicar deformación preservando puntos clave
-            if (deformationLevel > 0 || horizontalDeformation > 0 || verticalDeformation > 0) {
-                const amplitude = (maxTemp - minTemp) * 0.3 * deformationLevel * verticalDeformation;
-                const frequency = 0.05 + deformationLevel * 0.1;
-                const horizontalFactor = 1 + horizontalDeformation * 0.5;
-                
-                deformedData = deformedData.map((value, i) => {
-                    // Preservar puntos clave exactamente
-                    const isKeyPoint = keyPoints.some(point => point.index === i);
-                    if (preserveShape && isKeyPoint) {
-                        return value;
-                    }
-                    
-                    const noiseFactor = noise(i) * 2 - 1;
-                    const wave1 = Math.sin(i * frequency * horizontalFactor) * amplitude;
-                    const wave2 = Math.cos(i * frequency * 0.7 * horizontalFactor) * amplitude * 0.6;
-                    const deformation = noiseFactor * amplitude * 0.5 + wave1 + wave2;
-                    
-                    let newValue = value + deformation;
-                    
-                    // Suavizar transiciones cerca de puntos clave
-                    if (preserveShape) {
-                        const nearestKeyPoint = keyPoints.reduce((nearest, point) => {
-                            const distance = Math.abs(point.index - i);
-                            return distance < Math.abs(nearest.index - i) ? point : nearest;
-                        }, keyPoints[0]);
-                        
-                        const distance = Math.abs(nearestKeyPoint.index - i);
-                        const maxDistance = 10;
-                        
-                        if (distance < maxDistance) {
-                            const influence = 1 - (distance / maxDistance);
-                            newValue = value + deformation * influence;
-                        }
-                    }
-                    
-                    if (newValue < minTemp) newValue = minTemp;
-                    if (newValue > maxTemp) newValue = maxTemp;
-                    return newValue;
-                });
-            }
-            
-            // Aplicar efecto elástico solo si no estamos preservando forma
-            if (elasticEffect > 0 && !preserveShape) {
-                deformedData = applyElasticEffect(deformedData, elasticEffect);
-            }
-            
-            // Suavizado avanzado
-            if (smoothCurve) {
-                deformedData = advancedSmoothing(deformedData);
-            }
-            
-            return deformedData;
-        }
-
         // Función de ruido pseudoaleatorio
         function noise(index) {
             const x = Math.sin(index * 12.9898 + noiseSeed) * 43758.5453;
             return x - Math.floor(x);
+        }
+
+        // Aplicar deformación horizontal
+        function applyHorizontalDeformation(data, intensity) {
+            if (intensity <= 0) return data;
+            
+            const newData = [...data];
+            const stretchFactor = 1 + (intensity - 1) * 0.5;
+            
+            // Actualizar indicador de estado
+            horizontalStatus.className = intensity > 0 ? 'status-active' : 'status-inactive';
+            
+            for (let i = 0; i < newData.length; i++) {
+                const targetIndex = Math.round(i * stretchFactor);
+                if (targetIndex < newData.length) {
+                    newData[i] = newData[targetIndex];
+                }
+            }
+            
+            return newData;
+        }
+
+        // Aplicar deformación vertical
+        function applyVerticalDeformation(data, intensity) {
+            if (intensity <= 0) return data;
+            
+            const newData = [...data];
+            const amplitude = (maxTemp - minTemp) * 0.3 * intensity;
+            
+            // Actualizar indicador de estado
+            verticalStatus.className = intensity > 0 ? 'status-active' : 'status-inactive';
+            
+            for (let i = 0; i < newData.length; i++) {
+                const wave = Math.sin(i * 0.1) * amplitude;
+                newData[i] += wave;
+                
+                // Mantener dentro de los límites
+                if (newData[i] < minTemp) newData[i] = minTemp;
+                if (newData[i] > maxTemp) newData[i] = maxTemp;
+            }
+            
+            return newData;
+        }
+
+        // Aplicar efecto elástico
+        function applyElasticEffect(data, intensity) {
+            if (intensity <= 0) return data;
+            
+            const newData = [...data];
+            const amplitude = intensity * 0.25 * (maxTemp - minTemp);
+            
+            // Actualizar indicador de estado
+            elasticStatus.className = intensity > 0 ? 'status-active' : 'status-inactive';
+            
+            for (let i = 0; i < newData.length; i++) {
+                const wave1 = Math.sin(i * 0.5) * amplitude * noise(i);
+                const wave2 = Math.cos(i * 0.8) * amplitude * 0.7 * noise(i*1.3);
+                const wave3 = Math.sin(i * 1.2) * amplitude * 0.5 * noise(i*1.7);
+                
+                const combinedWave = (wave1 + wave2 + wave3) / 2.2;
+                newData[i] += combinedWave;
+                
+                // Asegurar que no exceda los límites
+                if (newData[i] < minTemp) newData[i] = minTemp;
+                if (newData[i] > maxTemp) newData[i] = maxTemp;
+            }
+            
+            return newData;
+        }
+
+        // Aplicar efecto caos
+        function applyChaosEffect(data, intensity) {
+            if (intensity <= 0) return data;
+            
+            const newData = [...data];
+            const amplitude = intensity * 0.2 * (maxTemp - minTemp);
+            
+            // Actualizar indicador de estado
+            chaosStatus.className = intensity > 0 ? 'status-active' : 'status-inactive';
+            
+            for (let i = 0; i < newData.length; i++) {
+                const noiseFactor = noise(i) * 2 - 1;
+                newData[i] += noiseFactor * amplitude;
+                
+                // Mantener dentro de los límites
+                if (newData[i] < minTemp) newData[i] = minTemp;
+                if (newData[i] > maxTemp) newData[i] = maxTemp;
+            }
+            
+            return newData;
         }
 
         // Suavizado avanzado para manejar picos agudos
@@ -1760,46 +1804,62 @@ result_json = process_excel()
             return smoothed;
         }
 
-        // Aplicar efecto elástico
-        function applyElasticEffect(data, intensity) {
-            if (intensity <= 0) return data;
+        // Calcular deformación preservando forma
+        function calculateDeformation(columnData) {
+            const originalRange = maxOriginal - minOriginal;
+            const newRange = maxTemp - minTemp;
             
-            const newData = [...data];
-            const flatZones = detectFlatZones(data);
-            const amplitude = intensity * 0.25 * (maxTemp - minTemp);
+            let deformedData = [];
             
-            flatZones.forEach(index => {
-                const wave1 = Math.sin(index * 0.5) * amplitude * noise(index);
-                const wave2 = Math.cos(index * 0.8) * amplitude * 0.7 * noise(index*1.3);
-                const wave3 = Math.sin(index * 1.2) * amplitude * 0.5 * noise(index*1.7);
-                
-                const combinedWave = (wave1 + wave2 + wave3) / 2.2;
-                newData[index] += combinedWave * 1.5;
-                
-                // Asegurar que no exceda los límites
-                if (newData[index] < minTemp) newData[index] = minTemp;
-                if (newData[index] > maxTemp) newData[index] = maxTemp;
-            });
-            
-            return newData;
-        }
-
-        // Detectar zonas planas
-        function detectFlatZones(data, threshold = 0.01) {
-            const flatZones = [];
-            const derivative = [];
-            
-            for (let i = 1; i < data.length; i++) {
-                derivative[i] = Math.abs(data[i] - data[i-1]);
+            if (originalRange === 0) {
+                const avg = (minTemp + maxTemp) / 2;
+                deformedData = columnData.map(() => avg);
+            } else {
+                // Escalado lineal inicial
+                deformedData = columnData.map(value => {
+                    const normalized = (value - minOriginal) / originalRange;
+                    return minTemp + normalized * newRange;
+                });
             }
             
-            for (let i = 1; i < derivative.length; i++) {
-                if (derivative[i] < threshold * (maxTemp - minTemp)) {
-                    flatZones.push(i);
+            // Aplicar deformaciones de forma independiente
+            if (horizontalDeformation > 0) {
+                deformedData = applyHorizontalDeformation(deformedData, horizontalDeformation);
+            }
+            
+            if (verticalDeformation > 0) {
+                deformedData = applyVerticalDeformation(deformedData, verticalDeformation);
+            }
+            
+            if (elasticEffect > 0) {
+                deformedData = applyElasticEffect(deformedData, elasticEffect);
+            }
+            
+            if (chaosEffect > 0) {
+                deformedData = applyChaosEffect(deformedData, chaosEffect);
+            }
+            
+            // Aplicar deformación global
+            if (deformationLevel > 0) {
+                const amplitude = (maxTemp - minTemp) * 0.3 * deformationLevel;
+                
+                for (let i = 0; i < deformedData.length; i++) {
+                    const noiseFactor = noise(i) * 2 - 1;
+                    const wave = Math.sin(i * 0.1) * amplitude;
+                    deformedData[i] += (noiseFactor * 0.5 + wave) * deformationLevel;
+                    
+                    // Mantener dentro de los límites
+                    if (deformedData[i] < minTemp) deformedData[i] = minTemp;
+                    if (deformedData[i] > maxTemp) deformedData[i] = maxTemp;
                 }
             }
             
-            return flatZones;
+            // Suavizado avanzado
+            if (smoothCurve) {
+                deformedData = advancedSmoothing(deformedData);
+            }
+            
+            return deformedData;
         }
 
         // Actualizar previsualización en tiempo real
@@ -1913,11 +1973,11 @@ from openpyxl.cell.cell import MergedCell
 
 def process_excel(data):
     try:
-        # 1. Leer archivo original
+        // 1. Leer archivo original
         filename = '${inputFile.name}'
         wb = load_workbook(filename, keep_vba=True, data_only=True)
         
-        # 2. Aplicar datos modificados SOLO donde había datos originales
+        // 2. Aplicar datos modificados SOLO donde había datos originales
         for sheet_name, columns in data['modifiedData'].items():
             if sheet_name in wb.sheetnames:
                 ws = wb[sheet_name]
@@ -1926,20 +1986,20 @@ def process_excel(data):
                         positions = data['cellPositions'][sheet_name][col_letter]
                         col_idx = column_index_from_string(col_letter)
                         
-                        # Escribir solo en las celdas originales
+                        // Escribir solo en las celdas originales
                         for i, value in enumerate(values):
                             if i < len(positions):
                                 row_idx = positions[i]
                                 cell = ws.cell(row=row_idx, column=col_idx)
                                 
-                                # Verificar si la celda es parte de un rango combinado
+                                // Verificar si la celda es parte de un rango combinado
                                 if isinstance(cell, MergedCell):
                                     continue
                                 
-                                # Convertir a float antes de asignar
+                                // Convertir a float antes de asignar
                                 cell.value = float(value)
         
-        # 3. Guardar cambios
+        // 3. Guardar cambios
         output_filename = 'modified_' + filename
         wb.save(output_filename)
         return "success"
@@ -1947,7 +2007,7 @@ def process_excel(data):
     except Exception as e:
         return f"ERROR: {str(e)}\\n{traceback.format_exc()}"
 
-# ===== EJECUCIÓN =====
+// ===== EJECUCIÓN =====
 data = json.loads('''${dataJson}''')
 result = process_excel(data)
 `;
@@ -2134,12 +2194,6 @@ result = process_excel(data)
             elasticEffectSlider.addEventListener('input', () => {
                 elasticEffect = elasticEffectSlider.value / 100;
                 elasticPercent.textContent = elasticEffectSlider.value + '%';
-                updatePreview();
-            });
-            
-            frequencyEffectSlider.addEventListener('input', () => {
-                frequencyEffect = frequencyEffectSlider.value / 100;
-                frequencyPercent.textContent = frequencyEffectSlider.value + '%';
                 updatePreview();
             });
             
