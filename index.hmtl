@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrapolador Avanzado - Controles Amplificados</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --success: #2ecc71;
+            --variation: #9b59b6;
+            --horizontal: #1abc9c;
+            --vertical: #f1c40f;
+            --elastic: #e67e22;
+            --excel: #217346;
+            --csv: #f39c12;
+            --txt: #7f8c8d;
+            --bg-gradient: linear-gradient(135deg, #1a2a6c, #2c3e50, #1a2a6c);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            padding: 15px;
+            overflow-x: hidden;
+            font-size: 15px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 12px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            grid-template-rows: auto 1fr auto;
+            grid-template-areas:
+                "header header"
+                "controls chart"
+                "footer footer";
+            height: calc(100vh - 30px);
+        }
+        
+        header {
+            grid-area: header;
+            background: linear-gradient(to right, #2c3e50, #4a6491);
+            color: white;
+            padding: 18px 30px;
+            text-align: center;
+            border-bottom: 2px solid var(--accent);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .subtitle {
+            font-size: 1.05rem;
+            opacity: 0.92;
+            max-width: 750px;
+            margin: 0 auto;
+            font-weight: 300;
+            line-height: 1.4;
+        }
+        
+        .controls {
+            grid-area: controls;
+            padding: 25px;
+            background: var(--light);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .chart-area {
+            grid-area: chart;
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            background: white;
+            border-left: 1px solid #eaeaea;
+            height: 100%;
+        }
+        
+        .chart-container {
+            flex: 1;
+            min-height: 350px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+            border: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .control-group {
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+        }
+        
+        .control-group:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .control-group h2 {
+            margin-bottom: 18px;
+            color: var(--primary);
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .input-group {
+            margin-bottom: 18px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+        
+        input[type="text"], input[type="file"], select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: white;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        input[type="text"]:focus, input[type="file"]:focus, select:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+        }
+        
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        /* MEJORA: Diseño de controles deslizantes mejorado */
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 12px;
+            background: linear-gradient(to right, #e0e0e0, #d0d0d0);
+            border-radius: 10px;
+            outline: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            flex: 1;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            border: 2px solid white;
+            transition: all 0.2s;
+        }
+        
+        #minTempRange::-webkit-slider-thumb { 
+            background: var(--secondary);
+        }
+        #maxTempRange::-webkit-slider-thumb { 
+            background: var(--accent);
+        }
+        #shapeDeformation::-webkit-slider-thumb { background: var(--variation); }
+        #horizontalDeformation::-webkit-slider-thumb { background: var(--horizontal); }
+        #verticalDeformation::-webkit-slider-thumb { background: var(--vertical); }
+        #elasticEffect::-webkit-slider-thumb { background: var(--elastic); }
+        #frequencyEffect::-webkit-slider-thumb { background: #3498db; }
+        #chaosEffect::-webkit-slider-thumb { background: #e74c3c; }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20px;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(25deg);
+            transition: all 0.6s;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.18);
+        }
+        
+        button:hover::after {
+            left: 120%;
+        }
+        
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #loadBtn {
+            background: linear-gradient(to right, #3498db, #2980b9);
+        }
+        
+        #downloadExcelBtn {
+            background: linear-gradient(to right, #217346, #27ae60);
+        }
+        
+        #downloadCsvBtn {
+            background: linear-gradient(to right, #f39c12, #e67e22);
+        }
+        
+        #downloadTxtBtn {
+            background: linear-gradient(to right, #7f8c8d, #95a5a6);
+        }
+        
+        #processExcelBtn {
+            background: linear-gradient(to right, #9b59b6, #8e44ad);
+        }
+        
+        .data-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+            text-align: center;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
+            transition: all 0.3s;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        
+        .info-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-card h3 {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+        
+        .info-card p {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        
+        .original-min { color: #3498db; }
+        .original-max { color: #e74c3c; }
+        .new-min { color: #2ecc71; }
+        .new-max { color: #f39c12; }
+        
+        footer {
+            grid-area: footer;
+            text-align: center;
+            padding: 15px;
+            color: var(--dark);
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.09);
+            background: rgba(236, 240, 241, 0.75);
+        }
+        
+        .status-message {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .warning { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+        
+        .progress-container {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.5s;
+            border-radius: 4px;
+        }
+        
+        .instructions {
+            background: linear-gradient(to right, #e3f2fd, #bbdefb);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        
+        .instructions li {
+            margin-bottom: 6px;
+            position: relative;
+            padding-left: 25px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            color: var(--secondary);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-size: 1.3em;
+        }
+        
+        .deformation-controls {
+            background: #f8f9fa;
+            padding: 18px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            margin-top: 15px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+        }
+        
+        .deformation-controls h3 {
+            margin-top: 0;
+            margin-bottom: 18px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--primary);
+            padding-bottom: 10px;
+            font-size: 1.15rem;
+        }
+        
+        .deformation-intensity {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 18px;
+            padding: 10px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .deformation-intensity:hover {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .deformation-intensity span {
+            min-width: 45px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            padding: 5px 8px;
+            border-radius: 5px;
+            background: rgba(0,0,0,0.04);
+        }
+        
+        #deformationPercent {
+            color: var(--variation);
+            background: rgba(155, 89, 182, 0.1);
+        }
+        
+        #horizontalPercent {
+            color: var(--horizontal);
+            background: rgba(26, 188, 156, 0.1);
+        }
+        
+        #verticalPercent {
+            color: var(--vertical);
+            background: rgba(241, 196, 15, 0.1);
+        }
+        
+        #elasticPercent {
+            color: var(--elastic);
+            background: rgba(230, 126, 34, 0.15);
+            font-weight: 800;
+        }
+        
+        #frequencyPercent {
+            color: #3498db;
+            background: rgba(52, 152, 219, 0.1);
+        }
+        
+        #chaosPercent {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+        }
+        
+        .deformation-description {
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: #5a6268;
+            padding: 0 10px;
+            font-style: italic;
+        }
+        
+        .toggle-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 500;
+            background: rgba(0,0,0,0.04);
+            padding: 8px 14px;
+            border-radius: 20px;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+        
+        .toggle-label:hover {
+            background: rgba(0,0,0,0.07);
+        }
+        
+        .toggle-label input {
+            margin-right: 8px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        
+        @media (max-width: 1000px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "header"
+                    "controls"
+                    "chart"
+                    "footer";
+                height: auto;
+            }
+            
+            .chart-area {
+                border-left: none;
+                border-top: 1px solid #e0e0e0;
+            }
+        }
+        
+        .pyodide-loading {
+            background: #f1c40f;
+            color: #2c3e50;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            display: none;
+            font-size: 0.95rem;
+        }
+        
+        .sheet-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .debug-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin-top: 20px;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .row-range {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .row-range > div {
+            flex: 1;
+        }
+        
+        .compact-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .chart-header h2 {
+            font-size: 1.3rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .column-list {
+            max-height: 180px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        
+        .column-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s;
+        }
+        
+        .column-item:hover {
+            background: #f0f7ff;
+            border-radius: 6px;
+        }
+        
+        .column-item:last-child {
+            border-bottom: none;
+        }
+        
+        .column-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .edit-btn {
+            padding: 5px 12px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+        
+        .edit-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .data-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .stat-card h3 {
+            font-size: 0.95rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .stat-card p {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        
+        .original-stat { color: #3498db; }
+        .modified-stat { color: #e74c3c; }
+        
+        .merge-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            padding: 18px 30px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            max-width: 400px;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .notification.success {
+            background: linear-gradient(to right, #27ae60, #2ecc71);
+        }
+        
+        .notification.error {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+        
+        .notification.warning {
+            background: linear-gradient(to right, #f39c12, #e67e22);
+        }
+        
+        .notification.info {
+            background: linear-gradient(to right, #3498db, #2980b9);
+        }
+        
+        .spinner {
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .target-indicator {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .format-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-left: 10px;
+        }
+        
+        .excel-badge { background: var(--excel); color: white; }
+        .csv-badge { background: var(--csv); color: white; }
+        .txt-badge { background: var(--txt); color: white; }
+        
+        .format-options {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .format-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            border: 2px solid transparent;
+        }
+        
+        .format-btn.active {
+            border-color: var(--primary);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        
+        .format-btn.excel {
+            background: rgba(33, 115, 70, 0.12);
+            color: var(--excel);
+        }
+        
+        .format-btn.csv {
+            background: rgba(243, 156, 18, 0.12);
+            color: var(--csv);
+        }
+        
+        .format-btn.txt {
+            background: rgba(127, 140, 141, 0.12);
+            color: var(--txt);
+        }
+        
+        .solution-highlight {
+            background: #e1f7d5;
+            padding: 18px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #4caf50;
+        }
+        
+        .solution-highlight h3 {
+            color: #2e7d32;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.2rem;
+        }
+        
+        .enhancement-tag {
+            background: rgba(76, 175, 80, 0.2);
+            color: #2e7d32;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .decimal-hint {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        /* Pestañas para cambiar entre modos */
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            background: #e0e0e0;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        /* Secciones separadas */
+        .file-section {
+            display: none;
+        }
+        
+        .file-section.active {
+            display: block;
+        }
+        
+        /* Nuevos estilos para visualización elástica */
+        .elastic-preview {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            gap: 10px;
+        }
+        
+        .elastic-demo {
+            width: 20px;
+            height: 10px;
+            background: var(--elastic);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            animation: elastic-pulse 1.5s infinite;
+            animation-delay: calc(var(--i) * 0.2s);
+        }
+        
+        @keyframes elastic-pulse {
+            0% { transform: scaleX(1); }
+            50% { transform: scaleX(0.4); }
+            100% { transform: scaleX(1); }
+        }
+    </style>
+</head>
+<body>
+    <div id="notificationArea"></div>
+    
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-file-waveform"></i> Extrapolador Avanzado <span class="format-badge excel-badge">DEFORMACIÓN AMPLIFICADA</span></h1>
+            <p class="subtitle">Controles mejorados para una deformación más intensa de curvas</p>
+        </header>
+        
+        <div class="controls">
+            <div class="solution-highlight">
+                <h3><i class="fas fa-check-circle"></i> Mejoras Implementadas</h3>
+                <ul>
+                    <li><span class="enhancement-tag">FIXED</span> Nuevos parámetros de deformación amplificada</li>
+                    <li><span class="enhancement-tag">UI</span> Controles deslizantes con mayor rango</li>
+                    <li><span class="enhancement-tag">ALGORITHM</span> Amplificación de efectos de deformación</li>
+                    <li><span class="enhancement-tag">FEATURE</span> Efecto de frecuencia y caos</li>
+                    <li><span class="enhancement-tag">PERFORMANCE</span> Visualización en tiempo real mejorada</li>
+                </ul>
+            </div>
+            
+            <div class="instructions">
+                <h3><i class="fas fa-lightbulb"></i> Modo de Uso</h3>
+                <ul>
+                    <li>Ingrese datos manualmente o use valores de ejemplo</li>
+                    <li>Ajuste los nuevos parámetros de deformación amplificada</li>
+                    <li>Visualice los cambios en tiempo real en el gráfico</li>
+                    <li>Use los controles de frecuencia y caos para efectos más extremos</li>
+                </ul>
+            </div>
+            
+            <div class="control-group">
+                <h2><i class="fas fa-sliders-h"></i> Parámetros de Deformación Amplificada</h2>
+                
+                <div class="input-group">
+                    <label for="minTemp"><i class="fas fa-temperature-low"></i> Mínima:</label>
+                    <div class="compact-group">
+                        <input type="text" id="minTemp" placeholder="Ej: 15,5" style="flex: 1;">
+                        <span id="minTempValue" class="info-card" style="width: 90px; text-align: center;">-- °C</span>
+                    </div>
+                    <input type="range" id="minTempRange" min="-10" max="50" step="0.5">
+                </div>
+                
+                <div class="input-group">
+                    <label for="maxTemp"><i class="fas fa-temperature-high"></i> Máxima:</label>
+                    <div class="compact-group">
+                        <input type="text" id="maxTemp" placeholder="Ej: 32,0" style="flex: 1;">
+                        <span id="maxTempValue" class="info-card" style="width: 90px; text-align: center;">-- °C</span>
+                    </div>
+                    <input type="range" id="maxTempRange" min="0" max="60" step="0.5">
+                </div>
+                
+                <div class="deformation-intensity">
+                    <span><i class="fas fa-shapes"></i> Intensidad</span>
+                    <input type="range" id="shapeDeformation" min="0" max="200" value="100">
+                    <span id="deformationPercent">100%</span>
+                </div>
+                <div class="deformation-description">Controla la intensidad de la deformación global</div>
+                
+                <div class="deformation-intensity">
+                    <span><i class="fas fa-arrows-alt-h"></i> Horizontal</span>
+                    <input type="range" id="horizontalDeformation" min="0" max="200" value="100">
+                    <span id="horizontalPercent">100%</span>
+                </div>
+                <div class="deformation-description">Ajusta la deformación en el eje horizontal</div>
+                
+                <div class="deformation-intensity">
+                    <span><i class="fas fa-arrows-alt-v"></i> Vertical</span>
+                    <input type="range" id="verticalDeformation" min="0" max="200" value="100">
+                    <span id="verticalPercent">100%</span>
+                </div>
+                <div class="deformation-description">Controla la deformación en el eje vertical</div>
+                
+                <div class="deformation-intensity">
+                    <span><i class="fas fa-expand-alt"></i> Elástico</span>
+                    <input type="range" id="elasticEffect" min="0" max="200" value="140">
+                    <span id="elasticPercent">140%</span>
+                </div>
+                <div class="deformation-description">Efecto amplificado para zonas planas</div>
+                
+                <div class="deformation-intensity">
+                    <span><i class="fas fa-wave-square"></i> Frecuencia</span>
+                    <input type="range" id="frequencyEffect" min="0" max="200" value="100">
+                    <span id="frequencyPercent">100%</span>
+                </div>
+                <div class="deformation-description">Densidad de las oscilaciones</div>
+                
+                <div class="deformation-intensity">
+                    <span><i class="fas fa-fire"></i> Caos</span>
+                    <input type="range" id="chaosEffect" min="0" max="200" value="50">
+                    <span id="chaosPercent">50%</span>
+                </div>
+                <div class="deformation-description">Aleatoriedad en la deformación</div>
+                
+                <div class="elastic-preview">
+                    <div class="elastic-demo" style="--i: 0"></div>
+                    <div class="elastic-demo" style="--i: 1"></div>
+                    <div class="elastic-demo" style="--i: 2"></div>
+                    <div class="elastic-demo" style="--i: 3"></div>
+                    <div class="elastic-demo" style="--i: 4"></div>
+                </div>
+                
+                <div class="toggle-group">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="smoothCurve" checked>
+                        <i class="fas fa-wave-circle"></i> Suavizado avanzado
+                    </label>
+                    <label class="toggle-label">
+                        <input type="checkbox" id="autoAdjust" checked>
+                        <i class="fas fa-magic"></i> Ajuste automático
+                    </label>
+                </div>
+                
+                <button id="generateDataBtn"><i class="fas fa-sync"></i> Generar Nuevos Datos</button>
+                <div id="deformationStatus" class="status-message"></div>
+                
+                <div class="data-stats">
+                    <div class="stat-card">
+                        <h3><i class="fas fa-arrow-down original-stat"></i> Mínimo Original</h3>
+                        <p id="originalMin">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3><i class="fas fa-arrow-up original-stat"></i> Máximo Original</h3>
+                        <p id="originalMax">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3><i class="fas fa-arrow-down modified-stat"></i> Nuevo Mínimo</h3>
+                        <p id="newMin">--</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3><i class="fas fa-arrow-up modified-stat"></i> Nuevo Máximo</h3>
+                        <p id="newMax">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-area">
+            <div class="chart-header">
+                <h2><i class="fas fa-chart-line"></i> Visualización de Datos</h2>
+                <div id="currentColumnInfo" class="info-card" style="padding: 10px; text-align: center; min-width: 250px;">
+                    Datos de ejemplo
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="dataChart"></canvas>
+            </div>
+            
+            <div class="debug-info">
+                <h4><i class="fas fa-info-circle"></i> Información de Parámetros</h4>
+                <div id="debugContent">Esperando datos...</div>
+            </div>
+        </div>
+        
+        <footer>
+            <p><i class="fas fa-info-circle"></i> Extrapolador Avanzado | Controles de deformación amplificados</p>
+        </footer>
+    </div>
+
+    <script>
+        // Variables globales
+        let originalData = [];
+        let minOriginal = 0;
+        let maxOriginal = 0;
+        let minTemp = 0;
+        let maxTemp = 0;
+        let dataChart = null;
+        let deformationLevel = 1.0;  // Amplificado a 200%
+        let horizontalDeformation = 1.0;
+        let verticalDeformation = 1.0;
+        let elasticEffect = 1.4;      // Amplificado a 140%
+        let frequencyEffect = 1.0;
+        let chaosEffect = 0.5;
+        let noiseSeed = Date.now();
+        let smoothCurve = true;
+        let autoAdjust = true;
+        let previewData = null;
+
+        // Elementos del DOM
+        const minTempInput = document.getElementById('minTemp');
+        const maxTempInput = document.getElementById('maxTemp');
+        const minTempRange = document.getElementById('minTempRange');
+        const maxTempRange = document.getElementById('maxTempRange');
+        const minTempValue = document.getElementById('minTempValue');
+        const maxTempValue = document.getElementById('maxTempValue');
+        const originalMinElem = document.getElementById('originalMin');
+        const originalMaxElem = document.getElementById('originalMax');
+        const newMinElem = document.getElementById('newMin');
+        const newMaxElem = document.getElementById('newMax');
+        const shapeDeformationSlider = document.getElementById('shapeDeformation');
+        const horizontalDeformationSlider = document.getElementById('horizontalDeformation');
+        const verticalDeformationSlider = document.getElementById('verticalDeformation');
+        const elasticEffectSlider = document.getElementById('elasticEffect');
+        const frequencyEffectSlider = document.getElementById('frequencyEffect');
+        const chaosEffectSlider = document.getElementById('chaosEffect');
+        const deformationPercent = document.getElementById('deformationPercent');
+        const horizontalPercent = document.getElementById('horizontalPercent');
+        const verticalPercent = document.getElementById('verticalPercent');
+        const elasticPercent = document.getElementById('elasticPercent');
+        const frequencyPercent = document.getElementById('frequencyPercent');
+        const chaosPercent = document.getElementById('chaosPercent');
+        const smoothCurveCheckbox = document.getElementById('smoothCurve');
+        const autoAdjustCheckbox = document.getElementById('autoAdjust');
+        const debugInfo = document.getElementById('debugContent');
+        const deformationStatus = document.getElementById('deformationStatus');
+        const generateDataBtn = document.getElementById('generateDataBtn');
+        const notificationArea = document.getElementById('notificationArea');
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info', duration = 3000) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                ${message}
+            `;
+            
+            notificationArea.appendChild(notification);
+            
+            // Forzar reflow para activar la animación
+            void notification.offsetWidth;
+            
+            notification.classList.add('show');
+            
+            // Eliminar notificación después de un tiempo
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, duration);
+        }
+
+        // Generar datos de ejemplo
+        function generateSampleData() {
+            const data = [];
+            const baseValue = 20;
+            const amplitude = 5;
+            const points = 150;
+            
+            for (let i = 0; i < points; i++) {
+                // Crear una curva con varias ondas superpuestas
+                const x = i / 10;
+                const value = baseValue + 
+                    Math.sin(x) * amplitude + 
+                    Math.sin(x * 0.5) * amplitude * 0.6 + 
+                    Math.sin(x * 0.3) * amplitude * 0.4;
+                
+                data.push(value);
+            }
+            
+            return data;
+        }
+
+        // Cargar datos para edición
+        function loadDataForEditing() {
+            originalData = generateSampleData();
+            
+            // Calcular min y max originales
+            minOriginal = Math.min(...originalData);
+            maxOriginal = Math.max(...originalData);
+            
+            minTemp = minOriginal;
+            maxTemp = maxOriginal;
+            
+            minTempInput.value = minTemp.toFixed(1).replace('.', ',');
+            maxTempInput.value = maxTemp.toFixed(1).replace('.', ',');
+            minTempRange.value = minTemp;
+            maxTempRange.value = maxTemp;
+            minTempValue.textContent = minTemp.toFixed(1).replace('.', ',') + "°C";
+            maxTempValue.textContent = maxTemp.toFixed(1).replace('.', ',') + "°C";
+            
+            // Actualizar estadísticas
+            originalMinElem.textContent = minOriginal.toFixed(1).replace('.', ',');
+            originalMaxElem.textContent = maxOriginal.toFixed(1).replace('.', ',');
+            newMinElem.textContent = minTemp.toFixed(1).replace('.', ',');
+            newMaxElem.textContent = maxTemp.toFixed(1).replace('.', ',');
+            
+            // Calcular y mostrar previsualización inicial
+            previewData = calculateDeformation(originalData);
+            updateChart(originalData, previewData);
+            
+            // Actualizar información de depuración
+            debugInfo.innerHTML = `
+                <div><strong>Intensidad:</strong> ${(deformationLevel * 100).toFixed(0)}%</div>
+                <div><strong>Horizontal:</strong> ${(horizontalDeformation * 100).toFixed(0)}%</div>
+                <div><strong>Vertical:</strong> ${(verticalDeformation * 100).toFixed(0)}%</div>
+                <div><strong>Elástico:</strong> ${(elasticEffect * 100).toFixed(0)}%</div>
+                <div><strong>Frecuencia:</strong> ${(frequencyEffect * 100).toFixed(0)}%</div>
+                <div><strong>Caos:</strong> ${(chaosEffect * 100).toFixed(0)}%</div>
+            `;
+            
+            showNotification("Datos de ejemplo generados", "success");
+        }
+
+        // Calcular deformación (sin guardar) con mejoras amplificadas
+        function calculateDeformation(columnData) {
+            const originalRange = maxOriginal - minOriginal;
+            const newRange = maxTemp - minTemp;
+            
+            let deformedData = [];
+            
+            if (originalRange === 0) {
+                const avg = (minTemp + maxTemp) / 2;
+                deformedData = columnData.map(() => avg);
+            } else {
+                deformedData = columnData.map(value => {
+                    const normalized = (value - minOriginal) / originalRange;
+                    return minTemp + normalized * newRange;
+                });
+            }
+            
+            // Aplicar deformación avanzada amplificada
+            if (deformationLevel > 0 || horizontalDeformation > 0 || verticalDeformation > 0) {
+                // Amplificación de parámetros
+                const amplitude = (maxTemp - minTemp) * 0.5 * deformationLevel * verticalDeformation;
+                const frequency = 0.1 + deformationLevel * 0.2 * frequencyEffect;
+                const horizontalFactor = 1 + horizontalDeformation * 0.8;
+                
+                deformedData = deformedData.map((value, i) => {
+                    // Ruido caótico amplificado
+                    const noiseFactor = noise(i) * 2 - 1;
+                    const chaos = chaosEffect * noiseFactor * amplitude * 0.8;
+                    
+                    // Ondas principales con mayor amplitud
+                    const wave1 = Math.sin(i * frequency * horizontalFactor) * amplitude;
+                    const wave2 = Math.cos(i * frequency * 0.7 * horizontalFactor) * amplitude * 0.6;
+                    const wave3 = Math.sin(i * frequency * 1.5 * horizontalFactor) * amplitude * 0.4;
+                    
+                    const deformation = chaos + wave1 + wave2 + wave3;
+                    
+                    let newValue = value + deformation;
+                    if (newValue < minTemp) newValue = minTemp;
+                    if (newValue > maxTemp) newValue = maxTemp;
+                    return newValue;
+                });
+            }
+            
+            // Aplicar efecto elástico AMPLIFICADO
+            if (elasticEffect > 0) {
+                deformedData = applyElasticEffect(deformedData, elasticEffect);
+            }
+            
+            // Suavizado avanzado
+            if (smoothCurve) {
+                deformedData = advancedSmoothing(deformedData);
+            }
+            
+            return deformedData;
+        }
+
+        // Función de ruido pseudoaleatorio
+        function noise(index) {
+            const x = Math.sin(index * 12.9898 + noiseSeed) * 43758.5453;
+            return x - Math.floor(x);
+        }
+
+        // Suavizado avanzado para manejar picos agudos
+        function advancedSmoothing(data) {
+            const smoothed = [];
+            const n = data.length;
+            
+            // Coeficientes para un filtro gaussiano de 5 puntos
+            const weights = [0.06136, 0.24477, 0.38774, 0.24477, 0.06136];
+            const halfWindow = 2;
+            
+            for (let i = 0; i < n; i++) {
+                let sum = 0;
+                let weightSum = 0;
+                
+                for (let j = -halfWindow; j <= halfWindow; j++) {
+                    const idx = i + j;
+                    if (idx >= 0 && idx < n) {
+                        const weight = weights[j + halfWindow];
+                        sum += data[idx] * weight;
+                        weightSum += weight;
+                    }
+                }
+                
+                smoothed[i] = sum / weightSum;
+            }
+            
+            return smoothed;
+        }
+
+        // Detectar zonas planas
+        function detectFlatZones(data, threshold = 0.01) {
+            const flatZones = [];
+            const derivative = [];
+            
+            for (let i = 1; i < data.length; i++) {
+                derivative[i] = Math.abs(data[i] - data[i-1]);
+            }
+            
+            for (let i = 1; i < derivative.length; i++) {
+                if (derivative[i] < threshold * (maxTemp - minTemp)) {
+                    flatZones.push(i);
+                }
+            }
+            
+            return flatZones;
+        }
+
+        // Aplicar efecto elástico AMPLIFICADO
+        function applyElasticEffect(data, intensity) {
+            if (intensity <= 0) return data;
+            
+            const newData = [...data];
+            const flatZones = detectFlatZones(data);
+            // Amplificación del efecto elástico
+            const amplitude = intensity * 0.4 * (maxTemp - minTemp);
+            
+            flatZones.forEach(index => {
+                const wave1 = Math.sin(index * 0.5) * amplitude * noise(index);
+                const wave2 = Math.cos(index * 0.8) * amplitude * 0.7 * noise(index*1.3);
+                const wave3 = Math.sin(index * 1.2) * amplitude * 0.5 * noise(index*1.7);
+                
+                const combinedWave = (wave1 + wave2 + wave3) / 2.2;
+                newData[index] += combinedWave * 2.0; // Factor de amplificación adicional
+                
+                // Asegurar que no exceda los límites
+                if (newData[index] < minTemp) newData[index] = minTemp;
+                if (newData[index] > maxTemp) newData[index] = maxTemp;
+            });
+            
+            return newData;
+        }
+
+        // Actualizar previsualización en tiempo real
+        function updatePreview() {
+            if (!originalData.length) return;
+            
+            // Calcular deformación
+            previewData = calculateDeformation(originalData);
+            
+            // Actualizar estadísticas en tiempo real
+            const newMin = Math.min(...previewData);
+            const newMax = Math.max(...previewData);
+            newMinElem.textContent = newMin.toFixed(1).replace('.', ',');
+            newMaxElem.textContent = newMax.toFixed(1).replace('.', ',');
+            
+            // Actualizar gráfico
+            updateChart(originalData, previewData);
+            
+            // Actualizar información de depuración
+            debugInfo.innerHTML = `
+                <div><strong>Intensidad:</strong> ${(deformationLevel * 100).toFixed(0)}%</div>
+                <div><strong>Horizontal:</strong> ${(horizontalDeformation * 100).toFixed(0)}%</div>
+                <div><strong>Vertical:</strong> ${(verticalDeformation * 100).toFixed(0)}%</div>
+                <div><strong>Elástico:</strong> ${(elasticEffect * 100).toFixed(0)}%</div>
+                <div><strong>Frecuencia:</strong> ${(frequencyEffect * 100).toFixed(0)}%</div>
+                <div><strong>Caos:</strong> ${(chaosEffect * 100).toFixed(0)}%</div>
+            `;
+        }
+
+        // Inicializar gráfico
+        function initChart() {
+            const ctx = document.getElementById('dataChart').getContext('2d');
+            dataChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Datos Originales',
+                            data: [],
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'Curva Extrapolada',
+                            data: [],
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            tension: 0.4,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Valor',
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.06)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Índice',
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.06)'
+                            },
+                            ticks: {
+                                maxTicksLimit: 15
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 13
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(1).replace('.', ',')}`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    animation: {
+                        duration: 300,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+
+        // Actualizar gráfico
+        function updateChart(original, deformed) {
+            if (dataChart) {
+                const labels = Array.from({length: original.length}, (_, i) => i % 50 === 0 ? `M${i+1}` : '');
+                
+                dataChart.data.labels = labels;
+                dataChart.data.datasets[0].data = original;
+                dataChart.data.datasets[1].data = deformed;
+                
+                dataChart.update();
+            }
+        }
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar gráfico
+            initChart();
+            
+            // Generar datos iniciales
+            loadDataForEditing();
+            
+            // Configurar eventos
+            minTempRange.addEventListener('input', () => {
+                minTemp = parseFloat(minTempRange.value);
+                minTempInput.value = minTemp.toFixed(1).replace('.', ',');
+                minTempValue.textContent = minTemp.toFixed(1).replace('.', ',') + "°C";
+                updatePreview();
+            });
+            
+            maxTempRange.addEventListener('input', () => {
+                maxTemp = parseFloat(maxTempRange.value);
+                maxTempInput.value = maxTemp.toFixed(1).replace('.', ',');
+                maxTempValue.textContent = maxTemp.toFixed(1).replace('.', ',') + "°C";
+                updatePreview();
+            });
+            
+            minTempInput.addEventListener('input', () => {
+                minTemp = parseFloat(minTempInput.value.replace(',', '.')) || 0;
+                minTempRange.value = minTemp;
+                minTempValue.textContent = minTempInput.value + "°C";
+                updatePreview();
+            });
+            
+            maxTempInput.addEventListener('input', () => {
+                maxTemp = parseFloat(maxTempInput.value.replace(',', '.')) || 0;
+                maxTempRange.value = maxTemp;
+                maxTempValue.textContent = maxTempInput.value + "°C";
+                updatePreview();
+            });
+            
+            // Controles de deformación
+            shapeDeformationSlider.addEventListener('input', () => {
+                deformationLevel = shapeDeformationSlider.value / 100;
+                deformationPercent.textContent = shapeDeformationSlider.value + '%';
+                updatePreview();
+            });
+            
+            horizontalDeformationSlider.addEventListener('input', () => {
+                horizontalDeformation = horizontalDeformationSlider.value / 100;
+                horizontalPercent.textContent = horizontalDeformationSlider.value + '%';
+                updatePreview();
+            });
+            
+            verticalDeformationSlider.addEventListener('input', () => {
+                verticalDeformation = verticalDeformationSlider.value / 100;
+                verticalPercent.textContent = verticalDeformationSlider.value + '%';
+                updatePreview();
+            });
+            
+            elasticEffectSlider.addEventListener('input', () => {
+                elasticEffect = elasticEffectSlider.value / 100;
+                elasticPercent.textContent = elasticEffectSlider.value + '%';
+                updatePreview();
+            });
+            
+            frequencyEffectSlider.addEventListener('input', () => {
+                frequencyEffect = frequencyEffectSlider.value / 100;
+                frequencyPercent.textContent = frequencyEffectSlider.value + '%';
+                updatePreview();
+            });
+            
+            chaosEffectSlider.addEventListener('input', () => {
+                chaosEffect = chaosEffectSlider.value / 100;
+                chaosPercent.textContent = chaosEffectSlider.value + '%';
+                updatePreview();
+            });
+            
+            // Controles de opciones
+            smoothCurveCheckbox.addEventListener('change', () => {
+                smoothCurve = smoothCurveCheckbox.checked;
+                updatePreview();
+            });
+            
+            autoAdjustCheckbox.addEventListener('change', () => {
+                autoAdjust = autoAdjustCheckbox.checked;
+                if (autoAdjust) {
+                    minTempInput.value = minOriginal.toFixed(1).replace('.', ',');
+                    maxTempInput.value = maxOriginal.toFixed(1).replace('.', ',');
+                    minTempRange.value = minOriginal;
+                    maxTempRange.value = maxOriginal;
+                    minTempValue.textContent = minOriginal.toFixed(1).replace('.', ',') + "°C";
+                    maxTempValue.textContent = maxOriginal.toFixed(1).replace('.', ',') + "°C";
+                    minTemp = minOriginal;
+                    maxTemp = maxOriginal;
+                    updatePreview();
+                }
+            });
+            
+            // Botón para generar nuevos datos
+            generateDataBtn.addEventListener('click', () => {
+                loadDataForEditing();
+            });
+            
+            // Mensaje inicial
+            showNotification("Datos de ejemplo generados. Ajuste los parámetros de deformación.", "info");
+        });
+    </script>
+</body>
+</html>
