@@ -1355,7 +1355,7 @@
             }
         }
 
-        // Cargar datos de Excel
+        // Cargar datos de Excel (VERSIÓN CORREGIDA)
         async function loadExcelData() {
             if (!pyodide || !inputFile) return;
             
@@ -1413,7 +1413,7 @@ def process_excel():
                 for row_idx in range(min_row, max_row + 1):
                     cell = ws.cell(row=row_idx, column=col_idx)
                     
-                    // Saltar celdas combinadas que no son la principal
+                    # Saltar celdas combinadas que no son la principal
                     if isinstance(cell, MergedCell):
                         continue
                     
@@ -1429,7 +1429,7 @@ def process_excel():
                             num = float(val)
                         
                         col_values.append(num)
-                        positions.append(row_idx)  // Guardar la fila original
+                        positions.append(row_idx)  # Guardar la fila original
                     except:
                         output["debug_info"] += "  Celda {}{} inválida: '{}'\\n".format(col_letter, row_idx, cell.value)
                 
@@ -1693,9 +1693,6 @@ result_json = process_excel()
             const newData = [...data];
             const stretchFactor = 1 + (intensity - 1) * 0.5;
             
-            // Actualizar indicador de estado
-            horizontalStatus.className = intensity > 0 ? 'status-active' : 'status-inactive';
-            
             for (let i = 0; i < newData.length; i++) {
                 const targetIndex = Math.round(i * stretchFactor);
                 if (targetIndex < newData.length) {
@@ -1712,9 +1709,6 @@ result_json = process_excel()
             
             const newData = [...data];
             const amplitude = (maxTemp - minTemp) * 0.3 * intensity;
-            
-            // Actualizar indicador de estado
-            verticalStatus.className = intensity > 0 ? 'status-active' : 'status-inactive';
             
             for (let i = 0; i < newData.length; i++) {
                 const wave = Math.sin(i * 0.1) * amplitude;
@@ -1734,9 +1728,6 @@ result_json = process_excel()
             
             const newData = [...data];
             const amplitude = intensity * 0.25 * (maxTemp - minTemp);
-            
-            // Actualizar indicador de estado
-            elasticStatus.className = intensity > 0 ? 'status-active' : 'status-inactive';
             
             for (let i = 0; i < newData.length; i++) {
                 const wave1 = Math.sin(i * 0.5) * amplitude * noise(i);
@@ -1760,9 +1751,6 @@ result_json = process_excel()
             
             const newData = [...data];
             const amplitude = intensity * 0.2 * (maxTemp - minTemp);
-            
-            // Actualizar indicador de estado
-            chaosStatus.className = intensity > 0 ? 'status-active' : 'status-inactive';
             
             for (let i = 0; i < newData.length; i++) {
                 const noiseFactor = noise(i) * 2 - 1;
@@ -1804,7 +1792,7 @@ result_json = process_excel()
             return smoothed;
         }
 
-        // Calcular deformación preservando forma
+        // Calcular deformación preservando forma (VERSIÓN MEJORADA)
         function calculateDeformation(columnData) {
             const originalRange = maxOriginal - minOriginal;
             const newRange = maxTemp - minTemp;
@@ -1837,21 +1825,6 @@ result_json = process_excel()
             
             if (chaosEffect > 0) {
                 deformedData = applyChaosEffect(deformedData, chaosEffect);
-            }
-            
-            // Aplicar deformación global
-            if (deformationLevel > 0) {
-                const amplitude = (maxTemp - minTemp) * 0.3 * deformationLevel;
-                
-                for (let i = 0; i < deformedData.length; i++) {
-                    const noiseFactor = noise(i) * 2 - 1;
-                    const wave = Math.sin(i * 0.1) * amplitude;
-                    deformedData[i] += (noiseFactor * 0.5 + wave) * deformationLevel;
-                    
-                    // Mantener dentro de los límites
-                    if (deformedData[i] < minTemp) deformedData[i] = minTemp;
-                    if (deformedData[i] > maxTemp) deformedData[i] = maxTemp;
-                }
             }
             
             // Suavizado avanzado
@@ -1973,11 +1946,11 @@ from openpyxl.cell.cell import MergedCell
 
 def process_excel(data):
     try:
-        // 1. Leer archivo original
+        # 1. Leer archivo original
         filename = '${inputFile.name}'
         wb = load_workbook(filename, keep_vba=True, data_only=True)
         
-        // 2. Aplicar datos modificados SOLO donde había datos originales
+        # 2. Aplicar datos modificados SOLO donde había datos originales
         for sheet_name, columns in data['modifiedData'].items():
             if sheet_name in wb.sheetnames:
                 ws = wb[sheet_name]
@@ -1986,20 +1959,20 @@ def process_excel(data):
                         positions = data['cellPositions'][sheet_name][col_letter]
                         col_idx = column_index_from_string(col_letter)
                         
-                        // Escribir solo en las celdas originales
+                        # Escribir solo en las celdas originales
                         for i, value in enumerate(values):
                             if i < len(positions):
                                 row_idx = positions[i]
                                 cell = ws.cell(row=row_idx, column=col_idx)
                                 
-                                // Verificar si la celda es parte de un rango combinado
+                                # Verificar si la celda es parte de un rango combinado
                                 if isinstance(cell, MergedCell):
                                     continue
                                 
-                                // Convertir a float antes de asignar
+                                # Convertir a float antes de asignar
                                 cell.value = float(value)
         
-        // 3. Guardar cambios
+        # 3. Guardar cambios
         output_filename = 'modified_' + filename
         wb.save(output_filename)
         return "success"
@@ -2007,7 +1980,7 @@ def process_excel(data):
     except Exception as e:
         return f"ERROR: {str(e)}\\n{traceback.format_exc()}"
 
-// ===== EJECUCIÓN =====
+# ===== EJECUCIÓN =====
 data = json.loads('''${dataJson}''')
 result = process_excel(data)
 `;
