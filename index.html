@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrapolador Avanzado - Versión Mejorada</title>
+    <title>Extrapolador Avanzado - Preservar Forma</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,6 +23,8 @@
             --csv: #f39c12;
             --txt: #7f8c8d;
             --bg-gradient: linear-gradient(135deg, #1a2a6c, #2c3e50, #1a2a6c);
+            --peak-color: #ff5252;
+            --valley-color: #4caf50;
         }
         
         * {
@@ -186,7 +188,6 @@
             margin-bottom: 15px;
         }
         
-        /* MEJORA: Diseño de controles deslizantes mejorado */
         input[type="range"] {
             -webkit-appearance: none;
             height: 12px;
@@ -914,6 +915,16 @@
             50% { transform: scaleX(0.4); }
             100% { transform: scaleX(1); }
         }
+        
+        .key-points-info {
+            background: #f0f7ff;
+            border: 1px solid #bbdefb;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -921,19 +932,18 @@
     
     <div class="container">
         <header>
-            <h1><i class="fas fa-file-waveform"></i> Extrapolador Avanzado <span class="format-badge excel-badge">DEFORMACIÓN AMPLIFICADA</span></h1>
-            <p class="subtitle">Controles mejorados para una deformación más intensa de curvas</p>
+            <h1><i class="fas fa-file-waveform"></i> Extrapolador Avanzado <span class="format-badge excel-badge">PRESERVAR FORMA</span></h1>
+            <p class="subtitle">Mantiene los picos y características distintivas de la curva original</p>
         </header>
         
         <div class="controls">
             <div class="solution-highlight">
-                <h3><i class="fas fa-check-circle"></i> Mejoras Implementadas</h3>
+                <h3><i class="fas fa-check-circle"></i> Características Clave</h3>
                 <ul>
-                    <li><span class="enhancement-tag">FIXED</span> Nuevos parámetros de deformación amplificada</li>
-                    <li><span class="enhancement-tag">UI</span> Controles deslizantes con mayor rango</li>
-                    <li><span class="enhancement-tag">ALGORITHM</span> Amplificación de efectos de deformación</li>
-                    <li><span class="enhancement-tag">FEATURE</span> Efecto de frecuencia y caos</li>
-                    <li><span class="enhancement-tag">PERFORMANCE</span> Visualización en tiempo real mejorada</li>
+                    <li><span class="enhancement-tag">ALGORITHM</span> Nuevo algoritmo que preserva los picos originales</li>
+                    <li><span class="enhancement-tag">FEATURE</span> Modo "Preservar Forma" activado por defecto</li>
+                    <li><span class="enhancement-tag">UI</span> Controles optimizados para mantener características clave</li>
+                    <li><span class="enhancement-tag">VISUAL</span> Destacado de picos y valles en el gráfico</li>
                 </ul>
             </div>
             
@@ -942,10 +952,9 @@
                 <ul>
                     <li>Cargue archivos Excel, CSV o de texto plano</li>
                     <li>Seleccione la columna a modificar</li>
-                    <li>Ajuste los nuevos parámetros de deformación</li>
-                    <li>Visualice los cambios en tiempo real en el gráfico</li>
+                    <li>Ajuste los parámetros de deformación</li>
+                    <li>Los picos y valles se mantendrán intactos</li>
                     <li>Descargue el archivo modificado en el formato deseado</li>
-                    <li>Usa <strong>comas</strong> como separador decimal (ej: 23,5)</li>
                 </ul>
             </div>
             
@@ -1092,13 +1101,17 @@
                 
                 <div class="toggle-group">
                     <label class="toggle-label">
-                        <input type="checkbox" id="smoothCurve" checked>
-                        <i class="fas fa-wave-circle"></i> Suavizado avanzado
+                        <input type="checkbox" id="preserveShape" checked>
+                        <i class="fas fa-mountain"></i> Preservar forma y picos
                     </label>
                     <label class="toggle-label">
-                        <input type="checkbox" id="autoAdjust" checked>
-                        <i class="fas fa-magic"></i> Ajuste automático
+                        <input type="checkbox" id="smoothCurve">
+                        <i class="fas fa-wave-circle"></i> Suavizado avanzado
                     </label>
+                </div>
+                
+                <div id="keyPointsInfo" class="key-points-info">
+                    <i class="fas fa-info-circle"></i> <span id="keyPointsCount">0</span> puntos clave detectados (picos y valles)
                 </div>
                 
                 <button id="applyDeformationBtn"><i class="fas fa-cogs"></i> Aplicar Cambios al Documento</button>
@@ -1165,7 +1178,7 @@
         </div>
         
         <footer>
-            <p><i class="fas fa-info-circle"></i> Extrapolador Avanzado | Soporte para Excel, CSV y TXT - Versión Mejorada</p>
+            <p><i class="fas fa-info-circle"></i> Extrapolador Avanzado | Preserva la forma original de la curva</p>
         </footer>
     </div>
 
@@ -1177,15 +1190,15 @@
         let minTemp = 0;
         let maxTemp = 0;
         let dataChart = null;
-        let deformationLevel = 1.0;  // Amplificado a 200%
+        let deformationLevel = 1.0;
         let horizontalDeformation = 1.0;
         let verticalDeformation = 1.0;
-        let elasticEffect = 1.4;      // Amplificado a 140%
+        let elasticEffect = 1.4;
         let frequencyEffect = 1.0;
         let chaosEffect = 0.5;
+        let preserveShape = true;
+        let smoothCurve = false;
         let noiseSeed = Date.now();
-        let smoothCurve = true;
-        let autoAdjust = true;
         let pyodide = null;
         let inputFile = null;
         let selectedSheet = "";
@@ -1199,7 +1212,8 @@
         let cellPositions = {};
         let fileType = "excel";
         let exportFormat = "excel";
-        let currentFileType = "excel"; // "excel" o "csv"
+        let currentFileType = "excel";
+        let keyPoints = [];
 
         // Elementos del DOM
         const excelFileInput = document.getElementById('excelFileInput');
@@ -1238,8 +1252,8 @@
         const elasticPercent = document.getElementById('elasticPercent');
         const frequencyPercent = document.getElementById('frequencyPercent');
         const chaosPercent = document.getElementById('chaosPercent');
+        const preserveShapeCheckbox = document.getElementById('preserveShape');
         const smoothCurveCheckbox = document.getElementById('smoothCurve');
-        const autoAdjustCheckbox = document.getElementById('autoAdjust');
         const pyodideLoading = document.getElementById('pyodideLoading');
         const debugInfo = document.getElementById('debugContent');
         const columnsList = document.getElementById('columnsList');
@@ -1255,6 +1269,8 @@
         const tabs = document.querySelectorAll('.tab');
         const excelSection = document.getElementById('excelSection');
         const csvSection = document.getElementById('csvSection');
+        const keyPointsInfo = document.getElementById('keyPointsInfo');
+        const keyPointsCount = document.getElementById('keyPointsCount');
 
         // Función para mostrar notificaciones
         function showNotification(message, type = 'info', duration = 3000) {
@@ -1582,6 +1598,26 @@ result_json = process_excel()
             });
         }
 
+        // Función para detectar puntos clave (picos y valles)
+        function detectKeyPoints(data) {
+            const keyPoints = [];
+            for (let i = 1; i < data.length - 1; i++) {
+                const prev = data[i - 1];
+                const current = data[i];
+                const next = data[i + 1];
+                
+                // Detectar picos (máximos locales)
+                if (current > prev && current > next) {
+                    keyPoints.push({index: i, value: current, type: 'peak'});
+                }
+                // Detectar valles (mínimos locales)
+                else if (current < prev && current < next) {
+                    keyPoints.push({index: i, value: current, type: 'valley'});
+                }
+            }
+            return keyPoints;
+        }
+
         // Cargar datos para edición
         function loadDataForEditing() {
             if (!selectedSheet || !selectedColumn) return;
@@ -1608,12 +1644,16 @@ result_json = process_excel()
             newMinElem.textContent = minTemp.toFixed(1).replace('.', ',');
             newMaxElem.textContent = maxTemp.toFixed(1).replace('.', ',');
             
+            // Detectar puntos clave
+            keyPoints = detectKeyPoints(columnData);
+            keyPointsCount.textContent = keyPoints.length;
+            
             // Calcular y mostrar previsualización inicial
             previewData = calculateDeformation(columnData);
             updateChart(columnData, previewData);
         }
 
-        // Calcular deformación (sin guardar) con mejoras amplificadas
+        // Calcular deformación preservando forma
         function calculateDeformation(columnData) {
             const originalRange = maxOriginal - minOriginal;
             const newRange = maxTemp - minTemp;
@@ -1624,40 +1664,57 @@ result_json = process_excel()
                 const avg = (minTemp + maxTemp) / 2;
                 deformedData = columnData.map(() => avg);
             } else {
+                // Escalado lineal inicial
                 deformedData = columnData.map(value => {
                     const normalized = (value - minOriginal) / originalRange;
                     return minTemp + normalized * newRange;
                 });
             }
             
-            // Aplicar deformación avanzada amplificada
+            // Aplicar deformación preservando puntos clave
             if (deformationLevel > 0 || horizontalDeformation > 0 || verticalDeformation > 0) {
-                // Amplificación de parámetros
-                const amplitude = (maxTemp - minTemp) * 0.5 * deformationLevel * verticalDeformation;
-                const frequency = 0.1 + deformationLevel * 0.2 * frequencyEffect;
-                const horizontalFactor = 1 + horizontalDeformation * 0.8;
+                const amplitude = (maxTemp - minTemp) * 0.3 * deformationLevel * verticalDeformation;
+                const frequency = 0.05 + deformationLevel * 0.1;
+                const horizontalFactor = 1 + horizontalDeformation * 0.5;
                 
                 deformedData = deformedData.map((value, i) => {
-                    // Ruido caótico amplificado
-                    const noiseFactor = noise(i) * 2 - 1;
-                    const chaos = chaosEffect * noiseFactor * amplitude * 0.8;
+                    // Preservar puntos clave exactamente
+                    const isKeyPoint = keyPoints.some(point => point.index === i);
+                    if (preserveShape && isKeyPoint) {
+                        return value;
+                    }
                     
-                    // Ondas principales con mayor amplitud
+                    const noiseFactor = noise(i) * 2 - 1;
                     const wave1 = Math.sin(i * frequency * horizontalFactor) * amplitude;
                     const wave2 = Math.cos(i * frequency * 0.7 * horizontalFactor) * amplitude * 0.6;
-                    const wave3 = Math.sin(i * frequency * 1.5 * horizontalFactor) * amplitude * 0.4;
-                    
-                    const deformation = chaos + wave1 + wave2 + wave3;
+                    const deformation = noiseFactor * amplitude * 0.5 + wave1 + wave2;
                     
                     let newValue = value + deformation;
+                    
+                    // Suavizar transiciones cerca de puntos clave
+                    if (preserveShape) {
+                        const nearestKeyPoint = keyPoints.reduce((nearest, point) => {
+                            const distance = Math.abs(point.index - i);
+                            return distance < Math.abs(nearest.index - i) ? point : nearest;
+                        }, keyPoints[0]);
+                        
+                        const distance = Math.abs(nearestKeyPoint.index - i);
+                        const maxDistance = 10;
+                        
+                        if (distance < maxDistance) {
+                            const influence = 1 - (distance / maxDistance);
+                            newValue = value + deformation * influence;
+                        }
+                    }
+                    
                     if (newValue < minTemp) newValue = minTemp;
                     if (newValue > maxTemp) newValue = maxTemp;
                     return newValue;
                 });
             }
             
-            // Aplicar efecto elástico AMPLIFICADO
-            if (elasticEffect > 0) {
+            // Aplicar efecto elástico solo si no estamos preservando forma
+            if (elasticEffect > 0 && !preserveShape) {
                 deformedData = applyElasticEffect(deformedData, elasticEffect);
             }
             
@@ -1703,6 +1760,30 @@ result_json = process_excel()
             return smoothed;
         }
 
+        // Aplicar efecto elástico
+        function applyElasticEffect(data, intensity) {
+            if (intensity <= 0) return data;
+            
+            const newData = [...data];
+            const flatZones = detectFlatZones(data);
+            const amplitude = intensity * 0.25 * (maxTemp - minTemp);
+            
+            flatZones.forEach(index => {
+                const wave1 = Math.sin(index * 0.5) * amplitude * noise(index);
+                const wave2 = Math.cos(index * 0.8) * amplitude * 0.7 * noise(index*1.3);
+                const wave3 = Math.sin(index * 1.2) * amplitude * 0.5 * noise(index*1.7);
+                
+                const combinedWave = (wave1 + wave2 + wave3) / 2.2;
+                newData[index] += combinedWave * 1.5;
+                
+                // Asegurar que no exceda los límites
+                if (newData[index] < minTemp) newData[index] = minTemp;
+                if (newData[index] > maxTemp) newData[index] = maxTemp;
+            });
+            
+            return newData;
+        }
+
         // Detectar zonas planas
         function detectFlatZones(data, threshold = 0.01) {
             const flatZones = [];
@@ -1721,36 +1802,15 @@ result_json = process_excel()
             return flatZones;
         }
 
-        // Aplicar efecto elástico AMPLIFICADO
-        function applyElasticEffect(data, intensity) {
-            if (intensity <= 0) return data;
-            
-            const newData = [...data];
-            const flatZones = detectFlatZones(data);
-            // Amplificación del efecto elástico
-            const amplitude = intensity * 0.4 * (maxTemp - minTemp);
-            
-            flatZones.forEach(index => {
-                const wave1 = Math.sin(index * 0.5) * amplitude * noise(index);
-                const wave2 = Math.cos(index * 0.8) * amplitude * 0.7 * noise(index*1.3);
-                const wave3 = Math.sin(index * 1.2) * amplitude * 0.5 * noise(index*1.7);
-                
-                const combinedWave = (wave1 + wave2 + wave3) / 2.2;
-                newData[index] += combinedWave * 2.0; // Factor de amplificación adicional
-                
-                // Asegurar que no exceda los límites
-                if (newData[index] < minTemp) newData[index] = minTemp;
-                if (newData[index] > maxTemp) newData[index] = maxTemp;
-            });
-            
-            return newData;
-        }
-
         // Actualizar previsualización en tiempo real
         function updatePreview() {
             if (!selectedSheet || !selectedColumn) return;
             
             const columnData = originalData[selectedSheet][selectedColumn];
+            
+            // Detectar puntos clave
+            keyPoints = detectKeyPoints(columnData);
+            keyPointsCount.textContent = keyPoints.length;
             
             // Calcular deformación
             previewData = calculateDeformation(columnData);
@@ -2090,24 +2150,14 @@ result = process_excel(data)
             });
             
             // Controles de opciones
-            smoothCurveCheckbox.addEventListener('change', () => {
-                smoothCurve = smoothCurveCheckbox.checked;
+            preserveShapeCheckbox.addEventListener('change', () => {
+                preserveShape = preserveShapeCheckbox.checked;
                 updatePreview();
             });
             
-            autoAdjustCheckbox.addEventListener('change', () => {
-                autoAdjust = autoAdjustCheckbox.checked;
-                if (autoAdjust && selectedSheet && selectedColumn) {
-                    minTempInput.value = minOriginal.toFixed(1).replace('.', ',');
-                    maxTempInput.value = maxOriginal.toFixed(1).replace('.', ',');
-                    minTempRange.value = minOriginal;
-                    maxTempRange.value = maxOriginal;
-                    minTempValue.textContent = minOriginal.toFixed(1).replace('.', ',') + "°C";
-                    maxTempValue.textContent = maxOriginal.toFixed(1).replace('.', ',') + "°C";
-                    minTemp = minOriginal;
-                    maxTemp = maxOriginal;
-                    updatePreview();
-                }
+            smoothCurveCheckbox.addEventListener('change', () => {
+                smoothCurve = smoothCurveCheckbox.checked;
+                updatePreview();
             });
             
             // Selector de formato de exportación
@@ -2153,6 +2203,15 @@ result = process_excel(data)
                             pointRadius: 0,
                             tension: 0.4,
                             fill: false
+                        },
+                        {
+                            label: 'Picos y Valles',
+                            data: [],
+                            pointBackgroundColor: [],
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            borderWidth: 0,
+                            showLine: false
                         }
                     ]
                 },
@@ -2226,9 +2285,20 @@ result = process_excel(data)
             if (dataChart) {
                 const labels = Array.from({length: original.length}, (_, i) => i % 50 === 0 ? `M${i+1}` : '');
                 
+                // Preparar datos para puntos clave
+                const keyPointsData = Array(original.length).fill(NaN);
+                const keyPointsColors = Array(original.length).fill('transparent');
+                
+                keyPoints.forEach(point => {
+                    keyPointsData[point.index] = deformed[point.index];
+                    keyPointsColors[point.index] = point.type === 'peak' ? 'var(--peak-color)' : 'var(--valley-color)';
+                });
+                
                 dataChart.data.labels = labels;
                 dataChart.data.datasets[0].data = original;
                 dataChart.data.datasets[1].data = deformed;
+                dataChart.data.datasets[2].data = keyPointsData;
+                dataChart.data.datasets[2].pointBackgroundColor = keyPointsColors;
                 
                 dataChart.update();
             }
