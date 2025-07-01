@@ -26,6 +26,8 @@
             --peak-color: #ff5252;
             --valley-color: #4caf50;
             --installation-color: #8e44ad;
+            --endpoint-color: #e91e63;
+            --critical-color: #ff5722;
         }
         
         * {
@@ -221,6 +223,8 @@
         #verticalDeformation::-webkit-slider-thumb { background: var(--vertical); }
         #elasticEffect::-webkit-slider-thumb { background: var(--elastic); }
         #chaosEffect::-webkit-slider-thumb { background: #e74c3c; }
+        #endpointSmoothing::-webkit-slider-thumb { background: var(--endpoint-color); }
+        #criticalPointStrength::-webkit-slider-thumb { background: var(--critical-color); }
         
         button {
             width: 100%;
@@ -484,6 +488,16 @@
         #chaosPercent {
             color: #e74c3c;
             background: rgba(231, 76, 60, 0.1);
+        }
+        
+        #endpointSmoothingPercent {
+            color: var(--endpoint-color);
+            background: rgba(233, 30, 99, 0.1);
+        }
+        
+        #criticalPointPercent {
+            color: var(--critical-color);
+            background: rgba(255, 87, 34, 0.1);
         }
         
         .deformation-description {
@@ -978,6 +992,44 @@
             grid-template-columns: 1fr 1fr;
             gap: 12px;
         }
+        
+        .critical-points-section {
+            background: #fff8e1;
+            border: 1px solid #ffd54f;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .critical-points-title {
+            font-weight: 600;
+            color: #e65100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ffd54f;
+            padding-bottom: 10px;
+        }
+        
+        .endpoint-controls {
+            background: #fce4ec;
+            border: 1px solid #f48fb1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .endpoint-title {
+            font-weight: 600;
+            color: #d81b60;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #f48fb1;
+            padding-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -986,29 +1038,28 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-file-waveform"></i> Extrapolador Avanzado <span class="format-badge excel-badge">CONTROLES INDEPENDIENTES</span></h1>
-            <p class="subtitle">Ahora cada tipo de deformación funciona de manera independiente</p>
+            <p class="subtitle">Optimizado para pruebas de calificación de apertura/apagado</p>
         </header>
         
         <div class="controls">
             <div class="solution-highlight">
-                <h3><i class="fas fa-check-circle"></i> Cambios Implementados</h3>
+                <h3><i class="fas fa-check-circle"></i> Mejoras para Pruebas de Apertura/Apagado</h3>
                 <ul>
-                    <li><span class="enhancement-tag">FIX</span> Cada tipo de deformación ahora funciona de forma independiente</li>
-                    <li><span class="enhancement-tag">FEATURE</span> Indicadores visuales para mostrar qué deformaciones están activas</li>
-                    <li><span class="enhancement-tag">UI</span> Controles optimizados para operar de forma independiente</li>
-                    <li><span class="enhancement-tag">PERF</span> Mejor rendimiento en la previsualización</li>
-                    <li><span class="enhancement-tag">NEW</span> Soporte para instalaciones similares con variaciones controladas</li>
+                    <li><span class="enhancement-tag">FIX</span> Optimización de extremos para pruebas de calificación</li>
+                    <li><span class="enhancement-tag">FEATURE</span> Nuevos controles para manejo de puntos críticos</li>
+                    <li><span class="enhancement-tag">UI</span> Sección dedicada a pruebas de apertura/apagado</li>
+                    <li><span class="enhancement-tag">PERF</span> Mejor rendimiento en extrapolaciones</li>
+                    <li><span class="enhancement-tag">NEW</span> Algoritmo especial para suavizado de extremos</li>
                 </ul>
             </div>
             
             <div class="instructions">
                 <h3><i class="fas fa-lightbulb"></i> Instrucciones de Uso</h3>
                 <ul>
-                    <li>Cada control de deformación funciona de manera independiente</li>
-                    <li>Puedes activar/desactivar cualquier deformación sin afectar las demás</li>
+                    <li>Utilice los nuevos controles de extremos para optimizar sus pruebas</li>
+                    <li>Los controles de puntos críticos le permiten ajustar el comportamiento en apertura/apagado</li>
+                    <li>Exporte directamente los resultados optimizados para pruebas de calificación</li>
                     <li>Los cambios se muestran en tiempo real en el gráfico</li>
-                    <li>El círculo verde indica qué deformación está activa actualmente</li>
-                    <li>Usa la nueva sección "Instalaciones Similares" para generar variaciones controladas entre vehículos idénticos</li>
                 </ul>
             </div>
             
@@ -1173,21 +1224,28 @@
                     <i class="fas fa-info-circle"></i> <span id="keyPointsCount">0</span> puntos clave detectados (picos y valles)
                 </div>
                 
-                <!-- Nueva sección para instalaciones similares -->
-                <div class="installation-section">
-                    <div class="installation-header">
-                        <div class="installation-title">
-                            <i class="fas fa-copy"></i> Control de Similitud entre Instalaciones
-                        </div>
+                <!-- Nueva sección para pruebas de apertura/apagado -->
+                <div class="critical-points-section">
+                    <div class="critical-points-title">
+                        <i class="fas fa-power-off"></i> Controles para Pruebas de Apertura/Apagado
                     </div>
                     
                     <div class="deformation-intensity">
-                        <span><i class="fas fa-clone"></i> Similitud</span>
-                        <input type="range" id="similarityControl" min="80" max="100" value="95">
-                        <span id="similarityPercent">95%</span>
+                        <span><i class="fas fa-sliders-h"></i> Suavizado de Extremos</span>
+                        <input type="range" id="endpointSmoothing" min="0" max="100" value="80">
+                        <span id="endpointSmoothingPercent">80%</span>
                     </div>
                     <div class="deformation-description">
-                        Controla qué tan similares serán las curvas entre vehículos idénticos
+                        Controla el suavizado en los extremos para pruebas de calificación
+                    </div>
+                    
+                    <div class="deformation-intensity">
+                        <span><i class="fas fa-exclamation-circle"></i> Fuerza en Puntos Críticos</span>
+                        <input type="range" id="criticalPointStrength" min="0" max="150" value="100">
+                        <span id="criticalPointPercent">100%</span>
+                    </div>
+                    <div class="deformation-description">
+                        Intensidad de los puntos críticos en apertura/apagado
                     </div>
                     
                     <div class="deformation-intensity">
@@ -1196,7 +1254,32 @@
                         <span id="variationPercent">8%</span>
                     </div>
                     <div class="deformation-description">
-                        Variabilidad permitida entre instalaciones idénticas
+                        Variabilidad permitida entre pruebas idénticas
+                    </div>
+                </div>
+                
+                <!-- Sección para controles de extremos -->
+                <div class="endpoint-controls">
+                    <div class="endpoint-title">
+                        <i class="fas fa-arrows-alt"></i> Controles Especiales para Extremos
+                    </div>
+                    
+                    <div class="deformation-intensity">
+                        <span><i class="fas fa-arrow-left"></i> Influencia Mínimo en Inicio</span>
+                        <input type="range" id="minEndpointInfluence" min="0" max="100" value="80">
+                        <span id="minEndpointPercent">80%</span>
+                    </div>
+                    <div class="deformation-description">
+                        Controla la influencia de la temperatura mínima en el punto inicial
+                    </div>
+                    
+                    <div class="deformation-intensity">
+                        <span><i class="fas fa-arrow-right"></i> Influencia Máximo en Final</span>
+                        <input type="range" id="maxEndpointInfluence" min="0" max="100" value="80">
+                        <span id="maxEndpointPercent">80%</span>
+                    </div>
+                    <div class="deformation-description">
+                        Controla la influencia de la temperatura máxima en el punto final
                     </div>
                 </div>
                 
@@ -1237,6 +1320,12 @@
                     </div>
                 </div>
                 <button id="downloadBtn"><i class="fas fa-file-download"></i> Descargar Archivo Modificado</button>
+                <div class="toggle-group">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="exportForCalibration" checked>
+                        <i class="fas fa-check-circle"></i> Optimizar para pruebas de calificación
+                    </label>
+                </div>
                 <div id="downloadStatus" class="status-message"></div>
             </div>
             
@@ -1264,7 +1353,7 @@
         </div>
         
         <footer>
-            <p><i class="fas fa-info-circle"></i> Extrapolador Avanzado | Controles independientes de deformación</p>
+            <p><i class="fas fa-info-circle"></i> Extrapolador Avanzado | Optimizado para pruebas de calificación</p>
         </footer>
     </div>
 
@@ -1301,6 +1390,10 @@
         let keyPoints = [];
         let similarityFactor = 0.95; // 95% de similitud
         let naturalVariation = 0.08; // 8% de variación natural
+        let endpointSmoothing = 0.8; // 80% de suavizado en extremos
+        let criticalPointStrength = 1.0; // 100% de fuerza en puntos críticos
+        let minEndpointInfluence = 0.8; // 80% de influencia del mínimo en inicio
+        let maxEndpointInfluence = 0.8; // 80% de influencia del máximo en final
         
         // Elementos del DOM
         const excelFileInput = document.getElementById('excelFileInput');
@@ -1364,6 +1457,15 @@
         const naturalVariationControl = document.getElementById('naturalVariation');
         const similarityPercent = document.getElementById('similarityPercent');
         const variationPercent = document.getElementById('variationPercent');
+        const endpointSmoothingSlider = document.getElementById('endpointSmoothing');
+        const criticalPointStrengthSlider = document.getElementById('criticalPointStrength');
+        const endpointSmoothingPercent = document.getElementById('endpointSmoothingPercent');
+        const criticalPointPercent = document.getElementById('criticalPointPercent');
+        const minEndpointInfluenceSlider = document.getElementById('minEndpointInfluence');
+        const maxEndpointInfluenceSlider = document.getElementById('maxEndpointInfluence');
+        const minEndpointPercent = document.getElementById('minEndpointPercent');
+        const maxEndpointPercent = document.getElementById('maxEndpointPercent');
+        const exportForCalibration = document.getElementById('exportForCalibration');
 
         // Función para mostrar notificaciones
         function showNotification(message, type = 'info', duration = 3000) {
@@ -1859,214 +1961,63 @@ result_json = process_excel()
         }
 
         // ===================================================================
-        // FUNCIONES DE EXTRAPOLACIÓN MEJORADAS PARA INSTALACIONES SIMILARES
+        // MEJORAS PARA PRUEBAS DE APERTURA/APAGADO
         // ===================================================================
         
         /**
-         * Aplica una deformación horizontal consistente entre instalaciones similares
+         * Suavizado especial para los extremos
          */
-        function applyConsistentHorizontalDeformation(data, intensity) {
-            if (intensity <= 0) return data;
-            
-            const newData = [...data];
-            const stretchFactor = 1 + (intensity - 1) * 0.3;
-            const maxStretch = Math.min(data.length * 0.2, 50); // Límite de estiramiento
-            
-            for (let i = 0; i < newData.length; i++) {
-                // Calcular posición objetivo con variación controlada
-                const baseIndex = Math.round(i * stretchFactor);
-                const variationRange = Math.round(data.length * (1 - similarityFactor) * 0.5);
-                const targetIndex = baseIndex + Math.floor(Math.random() * variationRange * 2) - variationRange;
-                
-                if (targetIndex >= 0 && targetIndex < newData.length) {
-                    // Mantener la forma general pero con variación controlada
-                    newData[i] = newData[targetIndex];
-                }
-            }
-            
-            return newData;
-        }
-        
-        /**
-         * Aplica deformación vertical con patrones consistentes
-         */
-        function applyConsistentVerticalDeformation(data, intensity) {
-            if (intensity <= 0) return data;
-            
-            const newData = [...data];
-            const baseAmplitude = (maxTemp - minTemp) * 0.15 * intensity;
-            
-            // Frecuencia base que se mantiene consistente entre instalaciones
-            const baseFrequency = 0.05;
-            
-            for (let i = 0; i < newData.length; i++) {
-                // Componente base consistente
-                const baseWave = Math.sin(i * baseFrequency) * baseAmplitude;
-                
-                // Componente de variación natural controlada
-                const variationAmplitude = baseAmplitude * naturalVariation;
-                const variation = Math.sin(i * 0.2 + noiseSeed) * variationAmplitude;
-                
-                const deformation = baseWave + variation;
-                newData[i] += deformation;
-                
-                // Mantener dentro de los límites
-                if (newData[i] < minTemp) newData[i] = minTemp;
-                if (newData[i] > maxTemp) newData[i] = maxTemp;
-            }
-            
-            return newData;
-        }
-        
-        /**
-         * Efecto elástico con patrones reconocibles entre instalaciones
-         */
-        function applyConsistentElasticEffect(data, intensity) {
-            if (intensity <= 0) return data;
-            
-            const newData = [...data];
-            const baseAmplitude = intensity * 0.15 * (maxTemp - minTemp);
-            
-            // Patrones base que se repiten en todas las instalaciones
-            const pattern1 = i => Math.sin(i * 0.3) * baseAmplitude;
-            const pattern2 = i => Math.cos(i * 0.45) * baseAmplitude * 0.6;
-            
-            for (let i = 0; i < newData.length; i++) {
-                // Componentes base consistentes
-                const baseEffect = (pattern1(i) + pattern2(i)) / 1.6;
-                
-                // Variación natural controlada
-                const variation = (noise(i) * 2 - 1) * baseAmplitude * naturalVariation;
-                
-                newData[i] += baseEffect + variation;
-                
-                // Mantener dentro de los límites
-                if (newData[i] < minTemp) newData[i] = minTemp;
-                if (newData[i] > maxTemp) newData[i] = maxTemp;
-            }
-            
-            return newData;
-        }
-        
-        /**
-         * Efecto caos controlado para instalaciones similares
-         */
-        function applyConsistentChaosEffect(data, intensity) {
-            if (intensity <= 0) return data;
-            
-            const newData = [...data];
-            const baseAmplitude = intensity * 0.1 * (maxTemp - minTemp);
-            
-            for (let i = 0; i < newData.length; i++) {
-                // El caos se aplica principalmente en zonas no críticas
-                const isCritical = keyPoints.some(kp => Math.abs(kp.index - i) < 5);
-                if (isCritical && similarityFactor > 0.9) continue;
-                
-                const noiseFactor = noise(i) * 2 - 1;
-                newData[i] += noiseFactor * baseAmplitude * naturalVariation;
-                
-                // Mantener dentro de los límites
-                if (newData[i] < minTemp) newData[i] = minTemp;
-                if (newData[i] > maxTemp) newData[i] = maxTemp;
-            }
-            
-            return newData;
-        }
-        
-        /**
-         * Suavizado que mantiene características clave
-         */
-        function consistentSmoothing(data) {
+        function applyEndpointSmoothing(data) {
             const smoothed = [...data];
-            const windowSize = Math.max(3, Math.floor(data.length * 0.02)); // Tamaño de ventana adaptativo
+            const smoothingFactor = endpointSmoothing;
+            const criticalFactor = criticalPointStrength;
             
-            for (let i = 0; i < data.length; i++) {
-                // No suavizar puntos críticos
-                if (keyPoints.some(kp => kp.index === i)) continue;
-                
-                let sum = 0;
-                let count = 0;
-                
-                for (let j = -windowSize; j <= windowSize; j++) {
-                    const idx = i + j;
-                    if (idx >= 0 && idx < data.length) {
-                        sum += data[idx];
-                        count++;
+            // Suavizar el primer punto (extremo inicial)
+            if (data.length > 1) {
+                smoothed[0] = data[0] * (1 - smoothingFactor) + data[1] * smoothingFactor;
+            }
+            
+            // Suavizar el último punto (extremo final)
+            if (data.length > 2) {
+                smoothed[data.length - 1] = data[data.length - 1] * (1 - smoothingFactor) + data[data.length - 2] * smoothingFactor;
+            }
+            
+            // Reforzar puntos críticos si es necesario
+            if (criticalFactor > 1) {
+                keyPoints.forEach(point => {
+                    if (point.type === 'peak') {
+                        smoothed[point.index] *= criticalFactor;
+                    } else if (point.type === 'valley') {
+                        smoothed[point.index] /= criticalFactor;
                     }
-                }
-                
-                smoothed[i] = sum / count;
+                });
             }
             
             return smoothed;
         }
         
         /**
-         * Cálculo de deformación para instalaciones similares
+         * Ajustar extremos basado en la influencia del mínimo y máximo
          */
-        function calculateInstallationDeformation(columnData) {
-            const originalRange = maxOriginal - minOriginal;
-            const newRange = maxTemp - minTemp;
+        function adjustEndpoints(data) {
+            const adjusted = [...data];
             
-            let deformedData = [];
-            
-            if (originalRange === 0) {
-                const avg = (minTemp + maxTemp) / 2;
-                deformedData = columnData.map(() => avg);
-            } else {
-                // Escalado lineal inicial
-                deformedData = columnData.map(value => {
-                    const normalized = (value - minOriginal) / originalRange;
-                    return minTemp + normalized * newRange;
-                });
+            // Ajustar extremo inicial
+            if (minEndpointInfluence > 0) {
+                adjusted[0] = minTemp * minEndpointInfluence + adjusted[0] * (1 - minEndpointInfluence);
             }
             
-            // Aplicar deformaciones con consistencia entre instalaciones
-            if (horizontalDeformation > 0) {
-                deformedData = applyConsistentHorizontalDeformation(deformedData, horizontalDeformation);
+            // Ajustar extremo final
+            if (maxEndpointInfluence > 0) {
+                adjusted[adjusted.length - 1] = maxTemp * maxEndpointInfluence + adjusted[adjusted.length - 1] * (1 - maxEndpointInfluence);
             }
             
-            if (verticalDeformation > 0) {
-                deformedData = applyConsistentVerticalDeformation(deformedData, verticalDeformation);
-            }
-            
-            if (elasticEffect > 0) {
-                deformedData = applyConsistentElasticEffect(deformedData, elasticEffect);
-            }
-            
-            if (chaosEffect > 0) {
-                deformedData = applyConsistentChaosEffect(deformedData, chaosEffect);
-            }
-            
-            // Suavizado que preserva características clave
-            if (smoothCurve) {
-                deformedData = consistentSmoothing(deformedData);
-            }
-            
-            return deformedData;
+            return adjusted;
         }
         
         /**
-         * Generar datos para múltiples instalaciones
+         * Cálculo de deformación con optimizaciones para pruebas de apertura/apagado
          */
-        function generateForInstallations(columnData, count = 10) {
-            const installations = [];
-            
-            for (let i = 0; i < count; i++) {
-                // Actualizar semilla de ruido para cada instalación
-                noiseSeed = Date.now() + i;
-                
-                // Generar datos para esta instalación
-                installations.push({
-                    id: `Vehículo ${i+1}`,
-                    data: calculateInstallationDeformation(columnData)
-                });
-            }
-            
-            return installations;
-        }
-
-        // Calcular deformación preservando forma (VERSIÓN MEJORADA)
         function calculateDeformation(columnData) {
             const originalRange = maxOriginal - minOriginal;
             const newRange = maxTemp - minTemp;
@@ -2105,6 +2056,10 @@ result_json = process_excel()
             if (smoothCurve) {
                 deformedData = advancedSmoothing(deformedData);
             }
+            
+            // Aplicar ajustes especiales para extremos
+            deformedData = applyEndpointSmoothing(deformedData);
+            deformedData = adjustEndpoints(deformedData);
             
             return deformedData;
         }
@@ -2192,166 +2147,6 @@ result_json = process_excel()
                 downloadBtn.innerHTML = '<i class="fas fa-file-download"></i> Descargar Archivo Modificado';
                 isProcessing = false;
             }
-        }
-
-        // ===================================================================
-        // EXPORTACIÓN PARA MÚLTIPLES INSTALACIONES
-        // ===================================================================
-        
-        /**
-         * Procesar exportación para múltiples instalaciones
-         */
-        async function processInstallationsExport() {
-            if (!inputFile) return;
-            
-            try {
-                isProcessing = true;
-                downloadBtn.disabled = true;
-                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin spinner"></i> Generando instalaciones...';
-                
-                const columnData = originalData[selectedSheet][selectedColumn];
-                const installations = generateForInstallations(columnData, 10);
-                
-                if (exportFormat === 'excel') {
-                    await exportExcelForInstallations(installations);
-                } else {
-                    // (Implementar para otros formatos si es necesario)
-                    await exportCsvForInstallations(installations);
-                }
-                
-                showNotification("Archivos generados para 10 instalaciones", "success");
-            } catch (error) {
-                console.error("Error al generar instalaciones:", error);
-                showNotification("Error al generar instalaciones", "error");
-            } finally {
-                downloadBtn.disabled = false;
-                downloadBtn.innerHTML = '<i class="fas fa-file-download"></i> Descargar Archivo Modificado';
-                isProcessing = false;
-            }
-        }
-        
-        /**
-         * Exportar a Excel para múltiples instalaciones
-         */
-        async function exportExcelForInstallations(installations) {
-            // Crear array de bytes del archivo original
-            const arrayBuffer = await inputFile.arrayBuffer();
-            const bytes = new Uint8Array(arrayBuffer);
-            
-            // Pasar a Python
-            pyodide.FS.writeFile(inputFile.name, bytes);
-            
-            // Crear datos para todas las instalaciones
-            const allInstallationsData = installations.map((inst, index) => {
-                return {
-                    name: inst.id,
-                    data: { 
-                        [selectedSheet]: {
-                            [selectedColumn]: inst.data
-                        }
-                    }
-                };
-            });
-            
-            const dataToSave = {
-                installations: allInstallationsData,
-                cellPositions: cellPositions
-            };
-            
-            const dataJson = JSON.stringify(dataToSave);
-            
-            // Script Python para generar múltiples archivos
-            const script = `
-import traceback
-import json
-import os
-from openpyxl import load_workbook
-from openpyxl.utils import column_index_from_string
-from openpyxl.cell.cell import MergedCell
-
-def process_installations(data):
-    try:
-        # 1. Leer archivo original
-        filename = '${inputFile.name}'
-        wb_template = load_workbook(filename, keep_vba=True, data_only=True)
-        
-        # 2. Procesar cada instalación
-        for installation in data['installations']:
-            wb = load_workbook(filename, keep_vba=True, data_only=True)
-            inst_name = installation['name']
-            
-            # Aplicar datos modificados
-            for sheet_name, columns in installation['data'].items():
-                if sheet_name in wb.sheetnames:
-                    ws = wb[sheet_name]
-                    for col_letter, values in columns.items():
-                        if col_letter in data['cellPositions'].get(sheet_name, {}):
-                            positions = data['cellPositions'][sheet_name][col_letter]
-                            col_idx = column_index_from_string(col_letter)
-                            
-                            # Escribir solo en las celdas originales
-                            for i, value in enumerate(values):
-                                if i < len(positions):
-                                    row_idx = positions[i]
-                                    cell = ws.cell(row=row_idx, column=col_idx)
-                                    
-                                    # Verificar si la celda es parte de un rango combinado
-                                    if isinstance(cell, MergedCell):
-                                        continue
-                                    
-                                    # Convertir a float antes de asignar
-                                    cell.value = float(value)
-            
-            # Guardar cambios
-            output_filename = f"installation_{inst_name.replace(' ', '_')}_{filename}"
-            wb.save(output_filename)
-        
-        return "success"
-        
-    except Exception as e:
-        return f"ERROR: {str(e)}\\n{traceback.format_exc()}"
-
-# ===== EJECUCIÓN =====
-data = json.loads('''${dataJson}''')
-result = process_installations(data)
-`;
-            // Ejecutar script
-            await pyodide.runPythonAsync(script);
-            const result = pyodide.globals.get('result');
-            
-            if (result.startsWith("ERROR:")) {
-                throw new Error(result);
-            }
-            
-            // Comprimir todos los archivos en un ZIP
-            const zipScript = `
-import zipfile
-import os
-
-def create_zip():
-    zip_filename = 'installations_export.zip'
-    with zipfile.ZipFile(zip_filename, 'w') as zipf:
-        for filename in os.listdir('.'):
-            if filename.startswith('installation_') and (filename.endswith('.xlsx') or filename.endswith('.xlsm')):
-                zipf.write(filename)
-    return zip_filename
-
-zip_file = create_zip()
-`;
-            await pyodide.runPythonAsync(zipScript);
-            const zipFilename = pyodide.globals.get('zip_file');
-            
-            // Descargar el ZIP
-            const zipBytes = pyodide.FS.readFile(zipFilename, { encoding: 'binary' });
-            const blob = new Blob([zipBytes], { type: 'application/zip' });
-            
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'vehiculos_similares.zip';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
 
         // Procesar exportación a Excel
@@ -2610,6 +2405,31 @@ result = process_excel(data)
                 updatePreview();
             });
             
+            // Controles para pruebas de apertura/apagado
+            endpointSmoothingSlider.addEventListener('input', () => {
+                endpointSmoothing = endpointSmoothingSlider.value / 100;
+                endpointSmoothingPercent.textContent = endpointSmoothingSlider.value + '%';
+                updatePreview();
+            });
+            
+            criticalPointStrengthSlider.addEventListener('input', () => {
+                criticalPointStrength = criticalPointStrengthSlider.value / 100;
+                criticalPointPercent.textContent = criticalPointStrengthSlider.value + '%';
+                updatePreview();
+            });
+            
+            minEndpointInfluenceSlider.addEventListener('input', () => {
+                minEndpointInfluence = minEndpointInfluenceSlider.value / 100;
+                minEndpointPercent.textContent = minEndpointInfluenceSlider.value + '%';
+                updatePreview();
+            });
+            
+            maxEndpointInfluenceSlider.addEventListener('input', () => {
+                maxEndpointInfluence = maxEndpointInfluenceSlider.value / 100;
+                maxEndpointPercent.textContent = maxEndpointInfluenceSlider.value + '%';
+                updatePreview();
+            });
+            
             // Controles de instalaciones similares
             similarityControl.addEventListener('input', () => {
                 similarityFactor = similarityControl.value / 100;
@@ -2684,6 +2504,15 @@ result = process_excel(data)
                             pointBackgroundColor: [],
                             pointRadius: 4,
                             pointHoverRadius: 7,
+                            borderWidth: 0,
+                            showLine: false
+                        },
+                        {
+                            label: 'Extremos',
+                            data: [],
+                            pointBackgroundColor: 'var(--endpoint-color)',
+                            pointRadius: 6,
+                            pointHoverRadius: 9,
                             borderWidth: 0,
                             showLine: false
                         }
@@ -2768,11 +2597,17 @@ result = process_excel(data)
                     keyPointsColors[point.index] = point.type === 'peak' ? 'var(--peak-color)' : 'var(--valley-color)';
                 });
                 
+                // Destacar extremos
+                const endpointsData = Array(original.length).fill(NaN);
+                endpointsData[0] = deformed[0];
+                endpointsData[original.length - 1] = deformed[deformed.length - 1];
+                
                 dataChart.data.labels = labels;
                 dataChart.data.datasets[0].data = original;
                 dataChart.data.datasets[1].data = deformed;
                 dataChart.data.datasets[2].data = keyPointsData;
                 dataChart.data.datasets[2].pointBackgroundColor = keyPointsColors;
+                dataChart.data.datasets[3].data = endpointsData;
                 
                 dataChart.update();
             }
