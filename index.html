@@ -1523,7 +1523,7 @@
             }
         }
 
-        // Cargar datos de Excel (VERSIÓN CORREGIDA)
+        // Cargar datos de Excel
         async function loadExcelData() {
             if (!pyodide || !inputFile) return;
             
@@ -2289,6 +2289,140 @@ result = process_excel(data)
             showNotification("Texto modificado descargado", "success");
         }
 
+        // Inicializar gráfico (VERSIÓN CORREGIDA)
+        function initChart() {
+            const ctx = document.getElementById('dataChart').getContext('2d');
+            dataChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Datos Originales',
+                            data: [],
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'Curva Extrapolada',
+                            data: [],
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'Picos y Valles',
+                            data: [],
+                            pointBackgroundColor: [],
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            borderWidth: 0,
+                            showLine: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Valor',
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.06)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Índice',
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.06)'
+                            },
+                            ticks: {
+                                maxTicksLimit: 15
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 13
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(1).replace('.', ',')}`;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    animation: {
+                        duration: 300,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+
+        // Actualizar gráfico (VERSIÓN CORREGIDA)
+        function updateChart(original, deformed) {
+            if (dataChart) {
+                const labels = Array.from({length: original.length}, (_, i) => i % 50 === 0 ? `M${i+1}` : '');
+                
+                // Preparar datos para puntos clave
+                const keyPointsData = Array(original.length).fill(NaN);
+                const keyPointsColors = Array(original.length).fill('transparent');
+                
+                keyPoints.forEach(point => {
+                    keyPointsData[point.index] = deformed[point.index];
+                    keyPointsColors[point.index] = point.type === 'peak' ? 'var(--peak-color)' : 'var(--valley-color)';
+                });
+                
+                // Destacar extremos en el mismo dataset
+                keyPointsData[0] = deformed[0];
+                keyPointsColors[0] = 'var(--endpoint-color)';
+                keyPointsData[original.length - 1] = deformed[deformed.length - 1];
+                keyPointsColors[original.length - 1] = 'var(--endpoint-color)';
+                
+                dataChart.data.labels = labels;
+                dataChart.data.datasets[0].data = original;
+                dataChart.data.datasets[1].data = deformed;
+                dataChart.data.datasets[2].data = keyPointsData;
+                dataChart.data.datasets[2].pointBackgroundColor = keyPointsColors;
+                
+                dataChart.update();
+            }
+        }
+
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', () => {
             // Inicializar Python
@@ -2469,149 +2603,6 @@ result = process_excel(data)
             // Mensaje inicial
             showNotification("Seleccione un archivo para comenzar", "info");
         });
-
-        // Inicializar gráfico
-        function initChart() {
-            const ctx = document.getElementById('dataChart').getContext('2d');
-            dataChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'Datos Originales',
-                            data: [],
-                            borderColor: '#3498db',
-                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                            borderWidth: 3,
-                            pointRadius: 0,
-                            tension: 0.4,
-                            fill: false
-                        },
-                        {
-                            label: 'Curva Extrapolada',
-                            data: [],
-                            borderColor: '#e74c3c',
-                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                            borderWidth: 3,
-                            pointRadius: 0,
-                            tension: 0.4,
-                            fill: false
-                        },
-                        {
-                            label: 'Picos y Valles',
-                            data: [],
-                            pointBackgroundColor: [],
-                            pointRadius: 4,
-                            pointHoverRadius: 7,
-                            borderWidth: 0,
-                            showLine: false
-                        },
-                        {
-                            label: 'Extremos',
-                            data: [],
-                            pointBackgroundColor: 'var(--endpoint-color)',
-                            pointRadius: 6,
-                            pointHoverRadius: 9,
-                            borderWidth: 0,
-                            showLine: false
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Valor',
-                                font: {
-                                    size: 13,
-                                    weight: 'bold'
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.06)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Índice',
-                                font: {
-                                    size: 13,
-                                    weight: 'bold'
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.06)'
-                            },
-                            ticks: {
-                                maxTicksLimit: 15
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                font: {
-                                    size: 13
-                                }
-                            }
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(1).replace('.', ',')}`;
-                                }
-                            }
-                        }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    },
-                    animation: {
-                        duration: 300,
-                        easing: 'easeOutQuart'
-                    }
-                }
-            });
-        }
-
-        // Actualizar gráfico
-        function updateChart(original, deformed) {
-            if (dataChart) {
-                const labels = Array.from({length: original.length}, (_, i) => i % 50 === 0 ? `M${i+1}` : '');
-                
-                // Preparar datos para puntos clave
-                const keyPointsData = Array(original.length).fill(NaN);
-                const keyPointsColors = Array(original.length).fill('transparent');
-                
-                keyPoints.forEach(point => {
-                    keyPointsData[point.index] = deformed[point.index];
-                    keyPointsColors[point.index] = point.type === 'peak' ? 'var(--peak-color)' : 'var(--valley-color)';
-                });
-                
-                // Destacar extremos
-                const endpointsData = Array(original.length).fill(NaN);
-                endpointsData[0] = deformed[0];
-                endpointsData[original.length - 1] = deformed[deformed.length - 1];
-                
-                dataChart.data.labels = labels;
-                dataChart.data.datasets[0].data = original;
-                dataChart.data.datasets[1].data = deformed;
-                dataChart.data.datasets[2].data = keyPointsData;
-                dataChart.data.datasets[2].pointBackgroundColor = keyPointsColors;
-                dataChart.data.datasets[3].data = endpointsData;
-                
-                dataChart.update();
-            }
-        }
     </script>
 </body>
 </html>
